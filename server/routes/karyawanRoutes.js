@@ -9,10 +9,14 @@ const {
 const { authenticateToken, checkOwner } = require('../middleware/auth');
 const router = express.Router();
 
-router.get('/pending', authenticateToken, checkOwner, getPendingRegistrations);
-router.post('/approve/:id', authenticateToken, checkOwner, approveKaryawan);
-router.delete('/reject/:id', authenticateToken, checkOwner, rejectKaryawan);
-router.get('/list', authenticateToken, checkOwner, getKaryawanList);
-router.delete('/resign/:id', authenticateToken, checkOwner, resignKaryawan);
+// Semua route hanya untuk owner yang sudah login
+router.use(authenticateToken);
+router.use(checkOwner);
+
+router.get('/pending', getPendingRegistrations);
+router.post('/approve/:id', approveKaryawan);
+router.delete('/reject/:id', rejectKaryawan);
+router.get('/list', getKaryawanList);
+router.delete('/resign/:id', resignKaryawan);
 
 module.exports = router;

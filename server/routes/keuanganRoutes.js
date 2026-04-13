@@ -15,25 +15,28 @@ const {
 const { authenticateToken, checkOwner } = require('../middleware/auth');
 const router = express.Router();
 
+// Semua route require login
+router.use(authenticateToken);
+
 // Pemasukan
-router.get('/pemasukan', authenticateToken, getPemasukan);
-router.post('/pemasukan', authenticateToken, addPemasukan);
-router.delete('/pemasukan/reset', authenticateToken, checkOwner, resetPemasukan);
+router.get('/pemasukan', getPemasukan);
+router.post('/pemasukan', addPemasukan);
+router.delete('/pemasukan/reset', checkOwner, resetPemasukan);
 
 // Biaya
-router.get('/biaya', authenticateToken, getBiaya);
-router.put('/biaya', authenticateToken, checkOwner, updateBiaya);
-router.delete('/biaya/history', authenticateToken, checkOwner, resetBiayaHistory);
+router.get('/biaya', getBiaya);
+router.put('/biaya', checkOwner, updateBiaya);
+router.delete('/biaya/history', checkOwner, resetBiayaHistory);
 
 // Profit Settings
-router.get('/profit-settings', authenticateToken, checkOwner, getProfitSettings);
-router.put('/profit-settings', authenticateToken, checkOwner, updateProfitSettings);
+router.get('/profit-settings', checkOwner, getProfitSettings);
+router.put('/profit-settings', checkOwner, updateProfitSettings);
 
 // Notifications
-router.get('/notifications', authenticateToken, getNotifications);
-router.put('/notifications/:id/read', authenticateToken, markNotificationRead);
+router.get('/notifications', getNotifications);
+router.put('/notifications/:id/read', markNotificationRead);
 
 // Logs
-router.get('/logs', authenticateToken, checkOwner, getActivityLogs);
+router.get('/logs', checkOwner, getActivityLogs);
 
 module.exports = router;

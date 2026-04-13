@@ -12,17 +12,19 @@ function FloatingNotification() {
 
     useEffect(() => {
         fetchNotifications();
-        const interval = setInterval(fetchNotifications, 30000);
+        const interval = setInterval(fetchNotifications, 10000); // setiap 10 detik
         return () => clearInterval(interval);
     }, []);
 
     const fetchNotifications = async () => {
         try {
             const response = await API.get('/keuangan/notifications');
+            const data = Array.isArray(response.data) ? response.data : [];
+            
             // Filter notifikasi: karyawan hanya lihat notif stok
-            let filteredNotif = response.data;
+            let filteredNotif = data;
             if (!isOwner) {
-                filteredNotif = response.data.filter(n => 
+                filteredNotif = data.filter(n => 
                     n.title === 'Stok Menipis' || n.title === 'Stok Habis'
                 );
             }
@@ -46,17 +48,6 @@ function FloatingNotification() {
         await markAsRead(notif.id);
         if (notif.barang_id) {
             navigate(isOwner ? '/owner/stok' : '/karyawan/stok');
-            setTimeout(() => {
-                const rows = document.querySelectorAll('#stokTbody tr');
-                for (let row of rows) {
-                    if (row.innerText.includes(notif.message.split(' ')[0])) {
-                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        row.classList.add('bg-amber-50');
-                        setTimeout(() => row.classList.remove('bg-amber-50'), 2000);
-                        break;
-                    }
-                }
-            }, 500);
         }
         setIsOpen(false);
     };
@@ -78,7 +69,7 @@ function FloatingNotification() {
 
             {/* Notification Panel */}
             {isOpen && (
-                <div className="absolute bottom-16 right-0 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-fade-in">
+                <div className="absolute bottom-16 right-0 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
                     <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 font-semibold text-gray-800 text-sm flex justify-between items-center">
                         <span>Notifikasi</span>
                         {unreadCount > 0 && (
@@ -105,7 +96,9 @@ function FloatingNotification() {
                                         <div className="flex-1">
                                             <p className="text-sm font-medium text-gray-800">{notif.title}</p>
                                             <p className="text-xs text-gray-500 mt-0.5">{notif.message}</p>
-                                            <p className="text-xs text-gray-400 mt-1">{new Date(notif.created_at).toLocaleString('id-ID')}</p>
+                                            <p className="text-xs text-gray-400 mt-1">
+                                                {new Date(notif.created_at).toLocaleString('id-ID')}
+                                            </p>
                                         </div>
                                         {notif.type === 'warning' && <i className="fas fa-exclamation-triangle text-amber-500 text-xs"></i>}
                                         {notif.type === 'danger' && <i className="fas fa-times-circle text-red-500 text-xs"></i>}

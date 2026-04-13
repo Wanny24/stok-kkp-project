@@ -5,6 +5,7 @@ import API from '../utils/api';
 
 function ActivityLog() {
     const [logs, setLogs] = useState([]);
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
     const userRole = localStorage.getItem('userRole');
 
@@ -14,15 +15,31 @@ function ActivityLog() {
 
     const fetchLogs = async () => {
         try {
+            setLoading(true);
             const response = await API.get('/keuangan/logs');
-            setLogs(response.data);
+            const data = Array.isArray(response.data) ? response.data : [];
+            setLogs(data);
         } catch (error) {
             console.error('Error fetching logs:', error);
+            setLogs([]);
+        } finally {
+            setLoading(false);
         }
     };
 
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50">
+                <Navbar role={userRole} />
+                <div className="flex justify-center items-center h-64">
+                    <div className="text-gray-500">Loading...</div>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div>
+        <div className="min-h-screen bg-gray-50">
             <Navbar role={userRole} />
             <div className="max-w-7xl mx-auto px-4 py-8">
                 <button
@@ -54,6 +71,11 @@ function ActivityLog() {
                                         <i className="fas fa-user-circle"></i>
                                         <strong>{log.username}</strong>
                                         <span className="text-xs">{new Date(log.timestamp).toLocaleString('id-ID')}</span>
+                                        {!log.decrypted && (
+                                            <span className="text-xs text-amber-500 ml-2">
+                                                <i className="fas fa-lock"></i> Terenkripsi
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="text-gray-800">{log.action}</div>
                                 </div>
