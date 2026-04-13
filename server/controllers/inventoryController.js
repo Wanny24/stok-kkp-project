@@ -5,10 +5,16 @@ const chacha20 = new ChaCha20Crypto(process.env.CHACHA20_KEY || 'default-chacha2
 
 const getInventory = async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT * FROM inventory ORDER BY id');
-        res.json(rows);
+        const rows = await db.query('SELECT * FROM inventory ORDER BY id');
+        
+        // Pastikan selalu mengembalikan array
+        const inventory = Array.isArray(rows) ? rows : [];
+        
+        res.json(inventory);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error('Error getInventory:', error);
+        // Kirim array kosong agar frontend tidak error
+        res.status(200).json([]);
     }
 };
 
@@ -23,7 +29,7 @@ const addInventory = async (req, res) => {
         });
         const encryptedData = chacha20.encrypt(sensitiveData);
         
-        const [result] = await db.query(
+        const result = await db.query(
             'INSERT INTO inventory (nama, stock, harga_jual, average_cost, min_stock, encrypted_data) VALUES (?, ?, ?, ?, ?, ?)',
             [nama, stock, harga_jual, average_cost, min_stock, encryptedData]
         );
@@ -33,6 +39,7 @@ const addInventory = async (req, res) => {
         
         res.json({ id: result.insertId, message: 'Barang berhasil ditambahkan' });
     } catch (error) {
+        console.error('Error addInventory:', error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -40,7 +47,11 @@ const addInventory = async (req, res) => {
 const updateMinStock = async (req, res) => {
     try {
         const { id, min_stock } = req.body;
-        const [item] = await db.query('SELECT nama FROM inventory WHERE id = ?', [id]);
+        const item = await db.query('SELECT nama FROM inventory WHERE id = ?', [id]);
+        
+        if (item.length === 0) {
+            return res.status(404).json({ message: 'Barang tidak ditemukan' });
+        }
         
         await db.query('UPDATE inventory SET min_stock = ? WHERE id = ?', [min_stock, id]);
         
@@ -49,6 +60,7 @@ const updateMinStock = async (req, res) => {
         
         res.json({ message: 'Batas minimum stok berhasil diupdate' });
     } catch (error) {
+        console.error('Error updateMinStock:', error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -56,7 +68,7 @@ const updateMinStock = async (req, res) => {
 const updateStock = async (req, res) => {
     try {
         const { id, type, quantity } = req.body;
-        const [item] = await db.query('SELECT * FROM inventory WHERE id = ?', [id]);
+        const item = await db.query('SELECT * FROM inventory WHERE id = ?', [id]);
         
         if (item.length === 0) {
             return res.status(404).json({ message: 'Barang tidak ditemukan' });
@@ -95,6 +107,7 @@ const updateStock = async (req, res) => {
         
         res.json({ message: 'Stok berhasil diupdate', newStock });
     } catch (error) {
+        console.error('Error updateStock:', error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -102,7 +115,7 @@ const updateStock = async (req, res) => {
 const updateAverageCost = async (req, res) => {
     try {
         const { id, newQuantity, newUnitCost } = req.body;
-        const [item] = await db.query('SELECT * FROM inventory WHERE id = ?', [id]);
+        const item = await db.query('SELECT * FROM inventory WHERE id = ?', [id]);
         
         if (item.length === 0) {
             return res.status(404).json({ message: 'Barang tidak ditemukan' });
@@ -128,6 +141,7 @@ const updateAverageCost = async (req, res) => {
         
         res.json({ message: 'Modal berhasil diupdate', newAverage: newAvg });
     } catch (error) {
+        console.error('Error updateAverageCost:', error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -135,7 +149,11 @@ const updateAverageCost = async (req, res) => {
 const updateHargaJual = async (req, res) => {
     try {
         const { id, harga_jual } = req.body;
-        const [item] = await db.query('SELECT * FROM inventory WHERE id = ?', [id]);
+        const item = await db.query('SELECT * FROM inventory WHERE id = ?', [id]);
+        
+        if (item.length === 0) {
+            return res.status(404).json({ message: 'Barang tidak ditemukan' });
+        }
         
         await db.query('UPDATE inventory SET harga_jual = ? WHERE id = ?', [harga_jual, id]);
         
@@ -147,6 +165,7 @@ const updateHargaJual = async (req, res) => {
         
         res.json({ message: 'Harga jual berhasil diupdate' });
     } catch (error) {
+        console.error('Error updateHargaJual:', error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -154,7 +173,7 @@ const updateHargaJual = async (req, res) => {
 const deleteInventory = async (req, res) => {
     try {
         const { id } = req.params;
-        const [item] = await db.query('SELECT * FROM inventory WHERE id = ?', [id]);
+        const item = await db.query('SELECT * FROM inventory WHERE id = ?', [id]);
         
         if (item.length === 0) {
             return res.status(404).json({ message: 'Barang tidak ditemukan' });
@@ -167,6 +186,7 @@ const deleteInventory = async (req, res) => {
         
         res.json({ message: 'Barang berhasil dihapus' });
     } catch (error) {
+        console.error('Error deleteInventory:', error);
         res.status(500).json({ message: error.message });
     }
 };

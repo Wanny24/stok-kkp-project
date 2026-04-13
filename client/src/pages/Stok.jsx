@@ -29,20 +29,43 @@ function Stok() {
         fetchInventory();
     }, []);
 
+    // Filter effect dengan safety check
     useEffect(() => {
-        const filtered = inventory.filter(item =>
-            item.nama.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setFilteredInventory(filtered);
+        const inventoryArray = Array.isArray(inventory) ? inventory : [];
+        
+        if (searchTerm.trim() === '') {
+            setFilteredInventory(inventoryArray);
+        } else {
+            const filtered = inventoryArray.filter(item =>
+                item && item.nama && item.nama.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            setFilteredInventory(filtered);
+        }
     }, [searchTerm, inventory]);
 
     const fetchInventory = async () => {
         try {
+            setLoading(true);
             const response = await API.get('/inventory');
-            setInventory(response.data);
-            setFilteredInventory(response.data);
+            
+            console.log('API Response:', response.data);
+            
+            let inventoryData = [];
+            if (Array.isArray(response.data)) {
+                inventoryData = response.data;
+            } else if (response.data && Array.isArray(response.data.data)) {
+                inventoryData = response.data.data;
+            } else {
+                console.error('Unexpected response format:', response.data);
+                inventoryData = [];
+            }
+            
+            setInventory(inventoryData);
+            setFilteredInventory(inventoryData);
         } catch (error) {
             console.error('Error fetching inventory:', error);
+            setInventory([]);
+            setFilteredInventory([]);
         } finally {
             setLoading(false);
         }
