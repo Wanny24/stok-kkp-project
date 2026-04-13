@@ -11,16 +11,16 @@ const login = async (req, res) => {
         console.log('Username:', username);
         console.log('========================================');
         
-        // Cek user di database
-        const [users] = await db.query(
-            'SELECT * FROM users WHERE username = ? AND status = "approved"',
+        // Cek user di database - PERBAIKAN: 'approved' diganti 'active'
+        const users = await db.query(
+            'SELECT * FROM users WHERE username = ? AND status = "active"',
             [username]
         );
         
         console.log('User found in database:', users.length > 0 ? 'YES' : 'NO');
         
         if (users.length === 0) {
-            console.log('User not found or not approved');
+            console.log('User not found or not active');
             return res.status(401).json({ 
                 success: false,
                 message: 'Username atau password salah' 
@@ -65,10 +65,6 @@ const login = async (req, res) => {
         console.log('Session created for user:', username);
         console.log('Token generated successfully');
         
-        // Panggil addActivityLog dari keuanganController
-        const { addActivityLog } = require('./keuanganController');
-        await addActivityLog(user.username, 'Login ke sistem');
-        
         // Kirim response sukses
         res.status(200).json({
             success: true,
@@ -102,11 +98,6 @@ const logout = async (req, res) => {
             await db.query('UPDATE user_sessions SET is_online = 0 WHERE token = ?', [token]);
         }
         
-        const { addActivityLog } = require('./keuanganController');
-        await addActivityLog(req.user.username, 'Logout dari sistem');
-        
-        console.log('Logout SUCCESS for user:', req.user.username);
-        
         res.json({ 
             success: true,
             message: 'Logout berhasil' 
@@ -123,7 +114,7 @@ const logout = async (req, res) => {
 const getOnlineUsers = async (req, res) => {
     try {
         // Get all karyawan with their online status
-        const [users] = await db.query(`
+        const users = await db.query(`
             SELECT 
                 u.id, 
                 u.username, 
@@ -149,7 +140,7 @@ const getOnlineUsers = async (req, res) => {
         }
         
         // Get login history for tooltip
-        const [history] = await db.query(`
+        const history = await db.query(`
             SELECT username, action, timestamp 
             FROM activity_logs 
             WHERE action LIKE '%Login%' 
@@ -196,7 +187,7 @@ const register = async (req, res) => {
         }
         
         // Cek apakah username sudah ada di users
-        const [existingUser] = await db.query(
+        const existingUser = await db.query(
             'SELECT id FROM users WHERE username = ?', 
             [username]
         );
@@ -210,7 +201,7 @@ const register = async (req, res) => {
         }
         
         // Cek apakah sudah pernah registrasi dan pending
-        const [existingPending] = await db.query(
+        const existingPending = await db.query(
             'SELECT id FROM pending_registrations WHERE username = ?', 
             [username]
         );
@@ -228,20 +219,12 @@ const register = async (req, res) => {
         console.log('Password hashed successfully');
         
         // Insert ke pending_registrations
-        const [result] = await db.query(
+        const result = await db.query(
             'INSERT INTO pending_registrations (username, password) VALUES (?, ?)',
             [username, hashedPassword]
         );
         
         console.log('Insert success, ID:', result.insertId);
-        
-        // Kirim notifikasi ke owner (panggil addNotification)
-        try {
-            const { addNotification } = require('./keuanganController');
-            await addNotification('system', 'Pendaftaran Baru', `Karyawan "${username}" mendaftar, menunggu persetujuan`, 'info');
-        } catch (err) {
-            console.log('Notification system not ready yet');
-        }
         
         // Kirim response sukses
         res.status(200).json({ 
