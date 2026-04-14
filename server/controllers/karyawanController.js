@@ -6,7 +6,7 @@ const getPendingRegistrations = async (req, res) => {
         res.json(pending);
     } catch (error) {
         console.error('Error getPendingRegistrations:', error);
-        res.status(500).json([]);
+        res.status(500).json({ message: error.message });
     }
 };
 
@@ -29,8 +29,7 @@ const approveKaryawan = async (req, res) => {
         
         const { addActivityLog, addNotification } = require('./keuanganController');
         await addActivityLog(req.user.username, `Menyetujui karyawan: ${user.username}`);
-        await addNotification(user.username, '✅ Akun Disetujui', `Akun Anda telah disetujui oleh Owner. Silakan login`, 'success');
-        await addNotification(req.user.username, '✅ Karyawan Disetujui', `Karyawan "${user.username}" telah disetujui`, 'success');
+        await addNotification(user.username, 'Akun Disetujui', 'Akun Anda telah disetujui oleh Owner, silakan login', 'success');
         
         res.json({ success: true, message: 'Karyawan berhasil disetujui' });
     } catch (error) {
@@ -63,38 +62,25 @@ const rejectKaryawan = async (req, res) => {
 
 const getKaryawanList = async (req, res) => {
     try {
-        // Update offline status untuk session yang sudah tidak aktif > 5 menit
-        await db.query(`
-            UPDATE user_sessions 
-            SET is_online = 0 
-            WHERE is_online = 1 AND last_activity < DATE_SUB(NOW(), INTERVAL 5 MINUTE)
-        `);
-        
         const karyawan = await db.query(`
-            SELECT 
-                u.id, 
-                u.username, 
-                u.role, 
-                u.status, 
-                COALESCE(us.is_online, 0) as is_online,
-                us.last_activity
+            SELECT u.id, u.username, u.role, u.status, 
+                   us.is_online, us.last_activity
             FROM users u
-            LEFT JOIN user_sessions us ON u.id = us.user_id AND us.is_online = 1
+            LEFT JOIN user_sessions us ON u.id = us.user_id
             WHERE u.role = 'karyawan'
             ORDER BY u.id DESC
         `);
         
-        // Convert ke boolean untuk frontend
+        // Convert is_online to boolean
         const formatted = karyawan.map(k => ({
             ...k,
-            is_online: k.is_online === 1,
-            last_activity: k.last_activity || null
+            is_online: k.is_online === 1
         }));
         
         res.json(formatted);
     } catch (error) {
         console.error('Error getKaryawanList:', error);
-        res.status(500).json([]);
+        res.status(500).json({ message: error.message });
     }
 };
 
