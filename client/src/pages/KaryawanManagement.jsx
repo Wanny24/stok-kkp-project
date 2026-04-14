@@ -253,4 +253,21 @@ function KaryawanManagement() {
     );
 }
 
+// Tambahkan useEffect untuk polling online status
+useEffect(() => {
+    fetchKaryawan();
+    const interval = setInterval(fetchKaryawan, 10000); // setiap 10 detik
+    return () => clearInterval(interval);
+}, []);
+
+// Status badge dengan icon
+<span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+    karyawan.is_online 
+        ? 'bg-green-100 text-green-700' 
+        : 'bg-gray-100 text-gray-500'
+}`}>
+    <span className={`w-2 h-2 rounded-full ${karyawan.is_online ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></span>
+    {karyawan.is_online ? 'Online' : 'Offline'}
+</span>
+
 export default KaryawanManagement;
