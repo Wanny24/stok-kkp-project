@@ -13,6 +13,7 @@ const authenticateToken = async (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'stok_kkp_super_secret_key_2024');
         req.user = decoded;
         
+        
         // UPDATE SESSION LAST ACTIVITY - TANDA ONLINE
         const [existing] = await db.query(
             'SELECT id FROM user_sessions WHERE user_id = ? AND token = ?',
