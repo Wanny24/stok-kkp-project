@@ -1,5 +1,5 @@
 {
-  "name": "stok-kkp-backend",
+  "name": "estock",
   "version": "1.0.0",
   "description": "Backend for Stok KKP Application with Express and MySQL",
   "main": "server.js",
@@ -16,7 +16,7 @@
     "inventory",
     "railway"
   ],
-  "author": "Your Name",
+  "author": "Irwan",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",

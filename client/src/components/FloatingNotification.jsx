@@ -12,7 +12,7 @@ function FloatingNotification() {
 
     useEffect(() => {
         fetchNotifications();
-        const interval = setInterval(fetchNotifications, 10000); // setiap 10 detik
+        const interval = setInterval(fetchNotifications, 10000);
         return () => clearInterval(interval);
     }, []);
 
@@ -21,7 +21,6 @@ function FloatingNotification() {
             const response = await API.get('/keuangan/notifications');
             const data = Array.isArray(response.data) ? response.data : [];
             
-            // Filter notifikasi: karyawan hanya lihat notif stok
             let filteredNotif = data;
             if (!isOwner) {
                 filteredNotif = data.filter(n => 
@@ -46,15 +45,22 @@ function FloatingNotification() {
 
     const handleNotificationClick = async (notif) => {
         await markAsRead(notif.id);
-        if (notif.barang_id) {
+        
+        // CEK NOTIFIKASI PENDAFTARAN KARYAWAN BARU
+        if (notif.title === 'Pendaftaran Baru' || (notif.message && notif.message.includes('mendaftar'))) {
+            // Arahkan ke halaman manajemen karyawan
+            navigate('/owner/karyawan');
+        } 
+        // CEK NOTIFIKASI STOK MENIPIS
+        else if (notif.barang_id) {
             navigate(isOwner ? '/owner/stok' : '/karyawan/stok');
         }
+        
         setIsOpen(false);
     };
 
     return (
         <div className="fixed bottom-6 right-6 z-50">
-            {/* Floating Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="relative w-14 h-14 bg-gray-900 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-600 transition-all hover:scale-105"
@@ -67,7 +73,6 @@ function FloatingNotification() {
                 )}
             </button>
 
-            {/* Notification Panel */}
             {isOpen && (
                 <div className="absolute bottom-16 right-0 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
                     <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 font-semibold text-gray-800 text-sm flex justify-between items-center">
