@@ -12,21 +12,17 @@ import ActivityLog from './pages/ActivityLog';
 import KaryawanManagement from './pages/KaryawanManagement';
 import FloatingNotification from './components/FloatingNotification';
 
-// Protected Route component - PERBAIKI
+// Protected Route component
 const ProtectedRoute = ({ children, allowedRole }) => {
     const token = localStorage.getItem('token');
     const userRole = localStorage.getItem('userRole');
     
-    console.log('ProtectedRoute - token:', !!token, 'userRole:', userRole, 'allowedRole:', allowedRole);
-    
     if (!token) {
-        console.log('No token, redirect to login');
         return <Navigate to="/login" />;
     }
     
     if (allowedRole && userRole !== allowedRole) {
-        console.log('Role mismatch, redirect');
-        return <Navigate to="/login" />;
+        return <Navigate to={userRole === 'owner' ? '/owner' : '/karyawan'} />;
     }
     
     return children;
@@ -42,14 +38,8 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 
-                {/* Owner Routes - perbaiki path */}
+                {/* Owner Routes */}
                 <Route path="/owner" element={
-                    <ProtectedRoute allowedRole="owner">
-                        <OwnerDashboard />
-                        <FloatingNotification />
-                    </ProtectedRoute>
-                } />
-                <Route path="/owner/dashboard" element={
                     <ProtectedRoute allowedRole="owner">
                         <OwnerDashboard />
                         <FloatingNotification />
@@ -79,7 +69,7 @@ function App() {
                         <FloatingNotification />
                     </ProtectedRoute>
                 } />
-                <Route path="/owner/activity-log" element={
+                <Route path="/owner/logs" element={
                     <ProtectedRoute allowedRole="owner">
                         <ActivityLog />
                         <FloatingNotification />
@@ -99,12 +89,6 @@ function App() {
                         <FloatingNotification />
                     </ProtectedRoute>
                 } />
-                <Route path="/karyawan/dashboard" element={
-                    <ProtectedRoute allowedRole="karyawan">
-                        <KaryawanDashboard />
-                        <FloatingNotification />
-                    </ProtectedRoute>
-                } />
                 <Route path="/karyawan/stok" element={
                     <ProtectedRoute allowedRole="karyawan">
                         <Stok />
@@ -112,7 +96,7 @@ function App() {
                     </ProtectedRoute>
                 } />
                 
-                <Route path="/" element={<Navigate to={token ? (userRole === 'owner' ? '/owner/dashboard' : '/karyawan/dashboard') : '/login'} />} />
+                <Route path="/" element={<Navigate to={token ? (userRole === 'owner' ? '/owner' : '/karyawan') : '/login'} />} />
             </Routes>
         </Router>
     );

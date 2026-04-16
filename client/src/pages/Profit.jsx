@@ -14,9 +14,9 @@ function Profit() {
     const [canUpdate, setCanUpdate] = useState(true);
     const [nextUpdateDate, setNextUpdateDate] = useState(null);
     const [showHistory, setShowHistory] = useState(false);
-    const [showBiayaModal, setShowBiayaModal] = useState(false);
-    const [biayaForm, setBiayaForm] = useState({ jenis: '', jumlah: '', keterangan: '', tanggal: '' });
-    const [editingId, setEditingId] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [modalType, setModalType] = useState('');
+    const [modalData, setModalData] = useState({});
     const navigate = useNavigate();
     const userRole = localStorage.getItem('userRole');
     const isOwner = userRole === 'owner';
@@ -97,12 +97,7 @@ function Profit() {
         }
     };
 
-    // INLINE EDIT BIAYA - LANGSUNG DI TABEL
-    const handleInlineBiayaChange = (jenis, value) => {
-        setBiaya({ ...biaya, [jenis]: parseFloat(value) || 0 });
-    };
-
-    const handleSaveBiaya = async () => {
+    const handleUpdateBiaya = async () => {
         try {
             await API.put('/keuangan/biaya', {
                 konsumsi: biaya.konsumsi,
@@ -112,54 +107,6 @@ function Profit() {
             alert('Biaya berhasil disimpan');
         } catch (error) {
             alert(error.response?.data?.message || 'Gagal update biaya');
-        }
-    };
-
-    // MODAL UNTUK TAMBAH BIAYA DENGAN KETERANGAN & TANGGAL
-    const openTambahBiayaModal = (jenis) => {
-        setBiayaForm({
-            jenis: jenis,
-            jumlah: '',
-            keterangan: '',
-            tanggal: new Date().toISOString().split('T')[0]
-        });
-        setEditingId(null);
-        setShowBiayaModal(true);
-    };
-
-    const handleSaveBiayaWithDetails = async () => {
-        if (!biayaForm.jumlah || biayaForm.jumlah <= 0) {
-            alert('Masukkan jumlah biaya');
-            return;
-        }
-        
-        try {
-            // Simpan ke database biaya utama
-            const newKonsumsi = biayaForm.jenis === 'konsumsi' 
-                ? biaya.konsumsi + parseFloat(biayaForm.jumlah) 
-                : biaya.konsumsi;
-            const newOperasional = biayaForm.jenis === 'operasional' 
-                ? biaya.operasional + parseFloat(biayaForm.jumlah) 
-                : biaya.operasional;
-            
-            await API.put('/keuangan/biaya', {
-                konsumsi: newKonsumsi,
-                operasional: newOperasional
-            });
-            
-            // Simpan ke history dengan detail
-            await API.post('/keuangan/biaya/history', {
-                jenis: biayaForm.jenis,
-                jumlah: parseFloat(biayaForm.jumlah),
-                keterangan: biayaForm.keterangan,
-                tanggal: biayaForm.tanggal
-            });
-            
-            await fetchData();
-            setShowBiayaModal(false);
-            alert('Biaya berhasil ditambahkan');
-        } catch (error) {
-            alert(error.response?.data?.message || 'Gagal menambah biaya');
         }
     };
 
@@ -195,6 +142,25 @@ function Profit() {
     const profitKotor = totalUangMasuk - biaya.konsumsi - biaya.operasional;
     const isProfitVisible = checkIfProfitVisible();
 
+    // Modal handlers untuk input form
+    const openModal = (type, currentValue = 0, label = '') => {
+        setModalType(type);
+        setModalData({ value: currentValue, label });
+        setShowModal(true);
+    };
+
+    const handleModalSave = () => {
+        const newValue = parseFloat(modalData.value);
+        if (isNaN(newValue)) return;
+        
+        if (modalType === 'konsumsi') {
+            setBiaya({ ...biaya, konsumsi: newValue });
+        } else if (modalType === 'operasional') {
+            setBiaya({ ...biaya, operasional: newValue });
+        }
+        setShowModal(false);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             <Navbar role={userRole} />
@@ -207,7 +173,7 @@ function Profit() {
                     <i className="fas fa-arrow-left"></i> Kembali
                 </button>
 
-                {/* Profit Settings Icon */}
+                {/* Profit Settings Icon - Only for Owner */}
                 {isOwner && (
                     <div className="flex justify-end mb-4">
                         <button
@@ -237,71 +203,29 @@ function Profit() {
                                 <span className="text-gray-600 text-sm">Total Uang Masuk</span>
                                 <strong className="text-green-600 text-base">{formatRupiah(totalUangMasuk)}</strong>
                             </div>
-                            
-                            {/* INLINE EDIT BIAYA KONSUMSI */}
                             <div className="flex justify-between items-center py-2 border-b border-gray-100">
                                 <span className="text-gray-600 text-sm">Biaya Konsumsi</span>
-                                <div className="flex items-center gap-2">
-                                    {isOwner ? (
-                                        <input
-                                            type="number"
-                                            value={biaya.konsumsi}
-                                            onChange={(e) => handleInlineBiayaChange('konsumsi', e.target.value)}
-                                            className="w-32 text-right px-2 py-1 border border-gray-200 rounded-lg text-sm"
-                                        />
-                                    ) : (
-                                        <span className="text-red-500 text-sm">{formatRupiah(biaya.konsumsi)}</span>
-                                    )}
-                                    {isOwner && (
-                                        <button
-                                            onClick={() => openTambahBiayaModal('konsumsi')}
-                                            className="text-green-500 hover:text-green-600 text-xs"
-                                            title="Tambah Biaya Konsumsi"
-                                        >
-                                            <i className="fas fa-plus-circle"></i>
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                            
-                            {/* INLINE EDIT BIAYA OPERASIONAL */}
-                            <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                                <span className="text-gray-600 text-sm">Biaya Operasional</span>
-                                <div className="flex items-center gap-2">
-                                    {isOwner ? (
-                                        <input
-                                            type="number"
-                                            value={biaya.operasional}
-                                            onChange={(e) => handleInlineBiayaChange('operasional', e.target.value)}
-                                            className="w-32 text-right px-2 py-1 border border-gray-200 rounded-lg text-sm"
-                                        />
-                                    ) : (
-                                        <span className="text-red-500 text-sm">{formatRupiah(biaya.operasional)}</span>
-                                    )}
-                                    {isOwner && (
-                                        <button
-                                            onClick={() => openTambahBiayaModal('operasional')}
-                                            className="text-green-500 hover:text-green-600 text-xs"
-                                            title="Tambah Biaya Operasional"
-                                        >
-                                            <i className="fas fa-plus-circle"></i>
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Tombol Simpan Biaya */}
-                        {isOwner && (
-                            <div className="mt-4">
-                                <button
-                                    onClick={handleSaveBiaya}
-                                    className="w-full bg-gray-600 text-white py-2 rounded-xl hover:bg-gray-700 transition-all text-sm"
+                                <button 
+                                    onClick={() => openModal('konsumsi', biaya.konsumsi, 'Konsumsi')}
+                                    className="text-red-500 text-sm hover:underline flex items-center gap-1"
+                                    disabled={!isOwner}
                                 >
-                                    Simpan Perubahan Biaya
+                                    - {formatRupiah(biaya.konsumsi)}
+                                    {isOwner && <i className="fas fa-pencil-alt text-xs"></i>}
                                 </button>
                             </div>
-                        )}
+                            <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                                <span className="text-gray-600 text-sm">Biaya Operasional</span>
+                                <button 
+                                    onClick={() => openModal('operasional', biaya.operasional, 'Operasional')}
+                                    className="text-red-500 text-sm hover:underline flex items-center gap-1"
+                                    disabled={!isOwner}
+                                >
+                                    - {formatRupiah(biaya.operasional)}
+                                    {isOwner && <i className="fas fa-pencil-alt text-xs"></i>}
+                                </button>
+                            </div>
+                        </div>
 
                         {/* Profit Result */}
                         {isOwner ? (
@@ -342,111 +266,119 @@ function Profit() {
                     </div>
                 </div>
 
-                {/* History Biaya Card */}
+                {/* Biaya Card */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex justify-between items-center flex-wrap gap-3">
                         <h3 className="font-bold text-gray-800 flex items-center gap-2">
                             <div className="w-8 h-8 bg-amber-100 rounded-xl flex items-center justify-center">
-                                <i className="fas fa-history text-amber-600 text-sm"></i>
+                                <i className="fas fa-sliders-h text-amber-600 text-sm"></i>
                             </div>
-                            Riwayat Biaya Operasional
+                            Biaya Operasional Mingguan
                         </h3>
                         {isOwner && (
-                            <button
-                                onClick={handleResetHistory}
-                                className="text-red-500 text-sm hover:underline"
-                            >
-                                <i className="fas fa-trash mr-1"></i> Reset History
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setShowHistory(!showHistory)}
+                                    className="text-blue-600 text-sm hover:underline"
+                                >
+                                    <i className="fas fa-history mr-1"></i> History
+                                </button>
+                                <button
+                                    onClick={handleResetHistory}
+                                    className="text-red-500 text-sm hover:underline"
+                                >
+                                    <i className="fas fa-trash mr-1"></i> Reset History
+                                </button>
+                            </div>
                         )}
                     </div>
                     
                     <div className="p-4 sm:p-6">
-                        {biaya.history.length === 0 ? (
-                            <div className="text-center py-8 text-gray-400">
-                                <i className="fas fa-inbox text-3xl mb-2 block"></i>
-                                <p className="text-sm">Belum ada riwayat biaya</p>
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            <div className="flex-1">
+                                <label className="block text-xs font-semibold text-gray-600 uppercase mb-1">Konsumsi (Rp)</label>
+                                <button
+                                    onClick={() => openModal('konsumsi', biaya.konsumsi, 'Konsumsi')}
+                                    className="w-full text-left px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 hover:bg-gray-100 transition-all"
+                                    disabled={!isOwner}
+                                >
+                                    {formatRupiah(biaya.konsumsi)}
+                                </button>
                             </div>
-                        ) : (
-                            <div className="space-y-3 max-h-96 overflow-y-auto">
-                                {biaya.history.map((item, idx) => (
-                                    <div key={idx} className="p-3 bg-gray-50 rounded-xl">
-                                        <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                                <label className="block text-xs font-semibold text-gray-600 uppercase mb-1">Operasional (Rp)</label>
+                                <button
+                                    onClick={() => openModal('operasional', biaya.operasional, 'Operasional')}
+                                    className="w-full text-left px-4 py-2 border border-gray-200 rounded-xl bg-gray-50 hover:bg-gray-100 transition-all"
+                                    disabled={!isOwner}
+                                >
+                                    {formatRupiah(biaya.operasional)}
+                                </button>
+                            </div>
+                            {isOwner && (
+                                <button
+                                    onClick={handleUpdateBiaya}
+                                    className="self-end bg-gray-600 text-white px-5 py-2 rounded-xl hover:bg-gray-700 transition-all"
+                                >
+                                    Simpan
+                                </button>
+                            )}
+                        </div>
+
+                        {/* History Biaya */}
+                        {showHistory && biaya.history.length > 0 && (
+                            <div className="mt-6 pt-4 border-t border-gray-100">
+                                <h4 className="font-semibold text-gray-700 text-sm mb-3">Riwayat Perubahan Biaya</h4>
+                                <div className="space-y-2 max-h-48 overflow-y-auto">
+                                    {biaya.history.map((item, idx) => (
+                                        <div key={idx} className="flex justify-between items-center text-xs p-2 bg-gray-50 rounded-lg">
                                             <div>
-                                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${item.jenis === 'konsumsi' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}`}>
-                                                    {item.jenis === 'konsumsi' ? 'Konsumsi' : 'Operasional'}
-                                                </span>
-                                                <p className="font-semibold text-gray-800 mt-1">{formatRupiah(item.jumlah)}</p>
-                                                {item.keterangan && (
-                                                    <p className="text-xs text-gray-500 mt-1">
-                                                        <i className="fas fa-info-circle mr-1"></i> {item.keterangan}
-                                                    </p>
-                                                )}
+                                                <span className="font-medium">{item.jenis === 'konsumsi' ? 'Konsumsi' : 'Operasional'}</span>
+                                                <span className="text-gray-500 ml-2">Rp {item.jumlah.toLocaleString('id-ID')}</span>
                                             </div>
-                                            <div className="text-right text-xs text-gray-400">
-                                                <p>{new Date(item.changed_at || item.tanggal).toLocaleDateString('id-ID')}</p>
-                                                <p className="text-xs">by {item.changed_by || 'Owner'}</p>
+                                            <div className="text-gray-400">
+                                                {new Date(item.changed_at).toLocaleString('id-ID')}
+                                                <span className="ml-2">by {item.changed_by}</span>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
                         )}
                     </div>
                 </div>
             </div>
 
-            {/* MODAL TAMBAH BIAYA DENGAN KETERANGAN & TANGGAL */}
-            {showBiayaModal && (
+            {/* Modal Input Biaya */}
+            {showModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl w-full max-w-md">
                         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                            <h3 className="font-bold">
-                                Tambah {biayaForm.jenis === 'konsumsi' ? 'Biaya Konsumsi' : 'Biaya Operasional'}
-                            </h3>
-                            <button onClick={() => setShowBiayaModal(false)} className="text-gray-400 hover:text-gray-600">
+                            <h3 className="font-bold">Edit {modalData.label}</h3>
+                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">
                                 <i className="fas fa-times"></i>
                             </button>
                         </div>
-                        <div className="p-6 space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Jumlah (Rp)</label>
-                                <input
-                                    type="number"
-                                    value={biayaForm.jumlah}
-                                    onChange={(e) => setBiayaForm({ ...biayaForm, jumlah: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400"
-                                    placeholder="Masukkan nominal"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Keterangan</label>
-                                <textarea
-                                    value={biayaForm.keterangan}
-                                    onChange={(e) => setBiayaForm({ ...biayaForm, keterangan: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400"
-                                    rows="2"
-                                    placeholder="Contoh: Beli bahan baku, Listrik, dll"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
-                                <input
-                                    type="date"
-                                    value={biayaForm.tanggal}
-                                    onChange={(e) => setBiayaForm({ ...biayaForm, tanggal: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400"
-                                />
-                            </div>
-                            <div className="flex gap-3 pt-4">
+                        <div className="p-6">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Jumlah (Rp)
+                            </label>
+                            <input
+                                type="number"
+                                value={modalData.value}
+                                onChange={(e) => setModalData({ ...modalData, value: e.target.value })}
+                                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400"
+                                placeholder="Masukkan nominal"
+                            />
+                            <div className="flex gap-3 mt-6">
                                 <button
-                                    onClick={() => setShowBiayaModal(false)}
+                                    onClick={() => setShowModal(false)}
                                     className="flex-1 px-4 py-2 border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50"
                                 >
                                     Batal
                                 </button>
                                 <button
-                                    onClick={handleSaveBiayaWithDetails}
+                                    onClick={handleModalSave}
                                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700"
                                 >
                                     Simpan
