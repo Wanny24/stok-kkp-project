@@ -101,7 +101,11 @@ function Profit() {
         try {
             await API.put('/keuangan/biaya', {
                 konsumsi: biaya.konsumsi,
-                operasional: biaya.operasional
+                konsumsi_keterangan: biaya.konsumsi_keterangan,
+                konsumsi_tanggal: biaya.konsumsi_tanggal,
+                operasional: biaya.operasional,
+                operasional_keterangan: biaya.operasional_keterangan,
+                operasional_tanggal: biaya.operasional_tanggal
             });
             await fetchData();
             alert('Biaya berhasil disimpan');
@@ -145,7 +149,12 @@ function Profit() {
     // Modal handlers untuk input form
     const openModal = (type, currentValue = 0, label = '') => {
         setModalType(type);
-        setModalData({ value: currentValue, label });
+        setModalData({ 
+            value: currentValue, 
+            label, 
+            keterangan: '', 
+            tanggal: new Date().toISOString().split('T')[0] 
+        });
         setShowModal(true);
     };
 
@@ -153,11 +162,13 @@ function Profit() {
         const newValue = parseFloat(modalData.value);
         if (isNaN(newValue)) return;
         
-        if (modalType === 'konsumsi') {
-            setBiaya({ ...biaya, konsumsi: newValue });
-        } else if (modalType === 'operasional') {
-            setBiaya({ ...biaya, operasional: newValue });
-        }
+        setBiaya(prev => ({
+            ...prev,
+            [modalType]: newValue,
+            [`${modalType}_keterangan`]: modalData.keterangan || '-',
+            [`${modalType}_tanggal`]: modalData.tanggal || new Date().toISOString().split('T')[0]
+        }));
+        
         setShowModal(false);
     };
 
@@ -205,25 +216,15 @@ function Profit() {
                             </div>
                             <div className="flex justify-between items-center py-2 border-b border-gray-100">
                                 <span className="text-gray-600 text-sm">Biaya Konsumsi</span>
-                                <button 
-                                    onClick={() => openModal('konsumsi', biaya.konsumsi, 'Konsumsi')}
-                                    className="text-red-500 text-sm hover:underline flex items-center gap-1"
-                                    disabled={!isOwner}
-                                >
+                                <span className="text-red-500 font-medium text-sm">
                                     - {formatRupiah(biaya.konsumsi)}
-                                    {isOwner && <i className="fas fa-pencil-alt text-xs"></i>}
-                                </button>
+                                </span>
                             </div>
                             <div className="flex justify-between items-center py-2 border-b border-gray-100">
                                 <span className="text-gray-600 text-sm">Biaya Operasional</span>
-                                <button 
-                                    onClick={() => openModal('operasional', biaya.operasional, 'Operasional')}
-                                    className="text-red-500 text-sm hover:underline flex items-center gap-1"
-                                    disabled={!isOwner}
-                                >
+                                <span className="text-red-500 font-medium text-sm">
                                     - {formatRupiah(biaya.operasional)}
-                                    {isOwner && <i className="fas fa-pencil-alt text-xs"></i>}
-                                </button>
+                                </span>
                             </div>
                         </div>
 
@@ -331,14 +332,17 @@ function Profit() {
                                 <h4 className="font-semibold text-gray-700 text-sm mb-3">Riwayat Perubahan Biaya</h4>
                                 <div className="space-y-2 max-h-48 overflow-y-auto">
                                     {biaya.history.map((item, idx) => (
-                                        <div key={idx} className="flex justify-between items-center text-xs p-2 bg-gray-50 rounded-lg">
-                                            <div>
-                                                <span className="font-medium">{item.jenis === 'konsumsi' ? 'Konsumsi' : 'Operasional'}</span>
-                                                <span className="text-gray-500 ml-2">Rp {item.jumlah.toLocaleString('id-ID')}</span>
+                                        <div key={idx} className="flex justify-between items-center text-xs p-2 bg-gray-50 rounded-lg border border-gray-100">
+                                            <div className="flex-1">
+                                                <div className="font-medium">
+                                                    {item.jenis === 'konsumsi' ? 'Konsumsi' : 'Operasional'}
+                                                    <span className="text-gray-500 ml-2">Rp {item.jumlah.toLocaleString('id-ID')}</span>
+                                                </div>
+                                                {item.keterangan && <div className="text-gray-500 italic mt-0.5">{item.keterangan}</div>}
                                             </div>
-                                            <div className="text-gray-400">
-                                                {new Date(item.changed_at).toLocaleString('id-ID')}
-                                                <span className="ml-2">by {item.changed_by}</span>
+                                            <div className="text-gray-400 text-right ml-4">
+                                                <div>{item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID') : new Date(item.changed_at).toLocaleDateString('id-ID')}</div>
+                                                <div className="mt-0.5">by {item.changed_by}</div>
                                             </div>
                                         </div>
                                     ))}
@@ -359,17 +363,42 @@ function Profit() {
                                 <i className="fas fa-times"></i>
                             </button>
                         </div>
-                        <div className="p-6">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Jumlah (Rp)
-                            </label>
-                            <input
-                                type="number"
-                                value={modalData.value}
-                                onChange={(e) => setModalData({ ...modalData, value: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400"
-                                placeholder="Masukkan nominal"
-                            />
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Jumlah (Rp)
+                                </label>
+                                <input
+                                    type="number"
+                                    value={modalData.value}
+                                    onChange={(e) => setModalData({ ...modalData, value: e.target.value })}
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400"
+                                    placeholder="Masukkan nominal"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Keterangan
+                                </label>
+                                <textarea
+                                    value={modalData.keterangan}
+                                    onChange={(e) => setModalData({ ...modalData, keterangan: e.target.value })}
+                                    rows="2"
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400"
+                                    placeholder="Contoh: Bensin, Makan Siang"
+                                ></textarea>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Tanggal
+                                </label>
+                                <input
+                                    type="date"
+                                    value={modalData.tanggal}
+                                    onChange={(e) => setModalData({ ...modalData, tanggal: e.target.value })}
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400"
+                                />
+                            </div>
                             <div className="flex gap-3 mt-6">
                                 <button
                                     onClick={() => setShowModal(false)}

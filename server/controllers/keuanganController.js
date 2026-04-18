@@ -74,18 +74,25 @@ const getBiaya = async (req, res) => {
 
 const updateBiaya = async (req, res) => {
     try {
-        const { konsumsi, operasional } = req.body;
+        const { 
+            konsumsi, operasional, 
+            konsumsi_keterangan, konsumsi_tanggal,
+            operasional_keterangan, operasional_tanggal 
+        } = req.body;
         
         await db.query('UPDATE biaya SET jumlah = ? WHERE jenis = ?', [konsumsi, 'konsumsi']);
         await db.query('UPDATE biaya SET jumlah = ? WHERE jenis = ?', [operasional, 'operasional']);
         
+        const konsumsiTgl = konsumsi_tanggal ? new Date(konsumsi_tanggal).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+        const pperasionalTgl = operasional_tanggal ? new Date(operasional_tanggal).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+
         await db.query(
-            'INSERT INTO biaya_history (jenis, jumlah, changed_by) VALUES (?, ?, ?)',
-            ['konsumsi', konsumsi, req.user.username]
+            'INSERT INTO biaya_history (jenis, jumlah, changed_by, keterangan, tanggal) VALUES (?, ?, ?, ?, ?)',
+            ['konsumsi', konsumsi, req.user.username, konsumsi_keterangan || '-', konsumsiTgl]
         );
         await db.query(
-            'INSERT INTO biaya_history (jenis, jumlah, changed_by) VALUES (?, ?, ?)',
-            ['operasional', operasional, req.user.username]
+            'INSERT INTO biaya_history (jenis, jumlah, changed_by, keterangan, tanggal) VALUES (?, ?, ?, ?, ?)',
+            ['operasional', operasional, req.user.username, operasional_keterangan || '-', pperasionalTgl]
         );
         
         await addActivityLog(

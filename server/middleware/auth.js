@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const db = require('../config/db');
 
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -19,6 +20,8 @@ const authenticateToken = (req, res, next) => {
             });
         }
         req.user = user;
+        // Keep session alive
+        db.query('UPDATE user_sessions SET last_activity = NOW(), is_online = 1 WHERE token = ?', [token]).catch(console.error);
         next();
     });
 };

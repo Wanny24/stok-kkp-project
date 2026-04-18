@@ -225,6 +225,12 @@ const register = async (req, res) => {
         );
         
         console.log('Insert success, ID:', result.insertId);
+
+        // Tambah notifikasi untuk owner
+        await db.query(
+            'INSERT INTO notifications (username, title, message, type, is_read, created_at) VALUES (?, ?, ?, ?, 0, NOW())',
+            ['owner', 'Karyawan Baru mendaftar', `Karyawan baru mendaftar dengan username ${username}, menunggu persetujuan.`, 'info']
+        );
         
         // Kirim response sukses
         res.status(200).json({ 

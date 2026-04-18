@@ -30,7 +30,7 @@ function Navbar({ role }) {
                 
                 <div className="flex items-center gap-2 sm:gap-4">
                     {/* Role Badge */}
-                    <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold ${isOwner ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-green-50 border-green-200 text-green-700'}`}>
+                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold ${isOwner ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-green-50 border-green-200 text-green-700'}`}>
                         <i className={`fas fa-${isOwner ? 'crown' : 'id-badge'} text-xs`}></i>
                         <span>{isOwner ? 'Owner' : 'Karyawan'}</span>
                     </div>

@@ -46,7 +46,9 @@ function FloatingNotification() {
 
     const handleNotificationClick = async (notif) => {
         await markAsRead(notif.id);
-        if (notif.barang_id) {
+        if (notif.title === 'Karyawan Baru mendaftar') {
+            navigate('/owner/karyawan');
+        } else if (notif.barang_id) {
             navigate(isOwner ? '/owner/stok' : '/karyawan/stok');
         }
         setIsOpen(false);

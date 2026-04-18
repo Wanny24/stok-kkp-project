@@ -13,6 +13,9 @@ function ActivityLog() {
         fetchLogs();
     }, []);
 
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+
     const fetchLogs = async () => {
         try {
             setLoading(true);
@@ -26,6 +29,14 @@ function ActivityLog() {
             setLoading(false);
         }
     };
+
+    const filteredLogs = logs.filter(log => {
+        if (!startDate && !endDate) return true;
+        const logDate = new Date(log.timestamp).toISOString().split('T')[0];
+        if (startDate && logDate < startDate) return false;
+        if (endDate && logDate > endDate) return false;
+        return true;
+    });
 
     if (loading) {
         return (
@@ -54,18 +65,28 @@ function ActivityLog() {
                         <h3 className="text-xl font-bold flex items-center gap-2">
                             <i className="fas fa-history text-blue-600"></i> Log Aktivitas
                         </h3>
-                        <p className="text-sm text-gray-500 mt-1">
+                        <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                            <div className="flex-1">
+                                <label className="block text-xs font-semibold text-gray-500 mb-1">Dari Tanggal</label>
+                                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400" />
+                            </div>
+                            <div className="flex-1">
+                                <label className="block text-xs font-semibold text-gray-500 mb-1">Sampai Tanggal</label>
+                                <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-400" />
+                            </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-3">
                             <i className="fas fa-lock mr-1"></i> Data dienkripsi dengan TwoFish
                         </p>
                     </div>
 
                     <div className="p-6 max-h-[600px] overflow-y-auto space-y-3">
-                        {logs.length === 0 ? (
+                        {filteredLogs.length === 0 ? (
                             <div className="text-center py-8 text-gray-500">
                                 Belum ada aktivitas
                             </div>
                         ) : (
-                            logs.map((log) => (
+                            filteredLogs.map((log) => (
                                 <div key={log.id} className="border-b border-gray-100 pb-3">
                                     <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
                                         <i className="fas fa-user-circle"></i>

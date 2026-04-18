@@ -120,6 +120,16 @@ async function autoMigrate() {
         `);
         console.log('✓ Table biaya_history ready');
 
+        try {
+            await connection.execute('ALTER TABLE biaya_history ADD COLUMN keterangan TEXT');
+            console.log('✓ Column keterangan added to biaya_history');
+        } catch (e) {}
+
+        try {
+            await connection.execute('ALTER TABLE biaya_history ADD COLUMN tanggal DATE');
+            console.log('✓ Column tanggal added to biaya_history');
+        } catch (e) {}
+
         // 7. Tabel activity_logs
         await connection.execute(`
             CREATE TABLE IF NOT EXISTS activity_logs (
