@@ -1,21 +1,11 @@
-const nodemailer = require('nodemailer');
+// Kita tinggalkan nodemailer karena diblokir oleh provider
+// Kita menggunakan REST API bawaan dari Node (fetch) untuk Brevo HTTPS Port 443 yang DIJAMIN lolos dari pemblokiran
 
-// Konfigurasi transporter
-// Disarankan untuk menggunakan App Password jika memakai Gmail
-const transporter = nodemailer.createTransport({
-    host: 'smtp-relay.brevo.com',
-    port: 2525, // Port khusus yang dijamin tidak diblokir oleh Railway!
-    auth: {
-        user: 'a88158001@smtp-brevo.com',
-        pass: '1ymIYh5ftCDXBpNx'
-    },
-    connectionTimeout: 5000, 
-    greetingTimeout: 5000,
-    socketTimeout: 5000
-});
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const SENDER_EMAIL = 'wannsart@gmail.com';
 
 /**
- * Mengirim email OTP
+ * Mengirim email OTP melalui Brevo REST API HTTPS
  * @param {string} to - Alamat email tujuan
  * @param {string} otp - Kode OTP 6 digit
  * @param {string} type - 'register' atau 'reset'
@@ -31,7 +21,7 @@ const sendOTPEmail = async (to, otp, type) => {
         html = `
             <h2>Verifikasi Pendaftaran</h2>
             <p>Terima kasih telah mendaftar di sistem Manajemen Stok Decha Jaya.</p>
-            <p>Kode OTP Anda adalah: <strong style="font-size:24px;">${otp}</strong></p>
+            <p>Kode OTP Anda adalah: <strong style="font-size:24px; color:#2563EB;">${otp}</strong></p>
             <p>Kode ini akan kadaluarsa dalam 10 menit.</p>
         `;
     } else if (type === 'reset') {
@@ -40,24 +30,47 @@ const sendOTPEmail = async (to, otp, type) => {
         html = `
             <h2>Reset Password</h2>
             <p>Kami menerima permintaan reset password untuk akun Anda.</p>
-            <p>Kode OTP Anda adalah: <strong style="font-size:24px;">${otp}</strong></p>
+            <p>Kode OTP Anda adalah: <strong style="font-size:24px; color:#2563EB;">${otp}</strong></p>
             <p>Kode ini akan kadaluarsa dalam 10 menit.</p>
         `;
     }
 
-    const mailOptions = {
-        from: `"Stok Decha Jaya" <wannsart@gmail.com>`,
-        to: to,
+    const payload = {
+        sender: { 
+            name: 'Stok Decha Jaya', 
+            email: SENDER_EMAIL 
+        },
+        to: [
+            { email: to }
+        ],
         subject: subject,
-        text: text,
-        html: html
+        htmlContent: html,
+        textContent: text
     };
 
     try {
-        await transporter.sendMail(mailOptions);
-        return { success: true };
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'api-key': BREVO_API_KEY,
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        // Kalau ada messageId, berarti 100% SUKSES dikirim Brevo
+        if (data.messageId) {
+            console.log('Email sukses dikirim! MessageId:', data.messageId);
+            return { success: true };
+        } else {
+            console.error('Brevo API menolak:', data);
+            return { success: false, error: data.message || 'Error API Brevo' };
+        }
     } catch (error) {
-        console.error('Error mengirim email:', error);
+        console.error('Fetch HTTP Error mengirim email:', error);
         return { success: false, error: error.message };
     }
 };
