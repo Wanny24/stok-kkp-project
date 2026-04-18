@@ -212,7 +212,7 @@ const requestOtp = async (req, res) => {
         res.json({ success: true, message: 'OTP berhasil dikirim ke email' });
     } catch (error) {
         console.error('requestOtp error:', error);
-        res.status(500).json({ success: false, message: 'Gagal memproses permintaan OTP' });
+        res.status(500).json({ success: false, message: 'Gagal memproses OTP: ' + error.message });
     }
 };
 
