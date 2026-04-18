@@ -49,29 +49,26 @@ const sendOTPEmail = async (to, otp, type) => {
     };
 
     try {
-        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-            method: 'POST',
+        const axios = require('axios');
+        const response = await axios.post('https://api.brevo.com/v3/smtp/email', payload, {
             headers: {
                 'accept': 'application/json',
                 'api-key': BREVO_API_KEY,
                 'content-type': 'application/json'
-            },
-            body: JSON.stringify(payload)
+            }
         });
 
-        const data = await response.json();
-
-        // Kalau ada messageId, berarti 100% SUKSES dikirim Brevo
-        if (data.messageId) {
-            console.log('Email sukses dikirim! MessageId:', data.messageId);
+        // Axios throws an error for non-2xx status codes, so if we reach here, it's a success
+        if (response.data && response.data.messageId) {
+            console.log('Email sukses dikirim! MessageId:', response.data.messageId);
             return { success: true };
         } else {
-            console.error('Brevo API menolak:', data);
-            return { success: false, error: data.message || 'Error API Brevo' };
+            console.error('Brevo API menolak dengan aneh:', response.data);
+            return { success: false, error: 'Respon API tidak memiliki MessageId' };
         }
     } catch (error) {
-        console.error('Fetch HTTP Error mengirim email:', error);
-        return { success: false, error: error.message };
+        console.error('Axios HTTP Error mengirim email:', error.response?.data || error.message);
+        return { success: false, error: error.response?.data?.message || error.message };
     }
 };
 
