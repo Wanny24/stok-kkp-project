@@ -82,7 +82,10 @@ function Login() {
                         />
                     </div>
                     <div className="mb-6">
-                        <label className="block text-xs font-semibold text-gray-600 uppercase mb-1">Password</label>
+                        <div className="flex justify-between flex-wrap gap-2 mb-1">
+                            <label className="block text-xs font-semibold text-gray-600 uppercase">Password</label>
+                            <Link to="/reset-password" className="text-xs text-blue-600 hover:underline">Lupa Password?</Link>
+                        </div>
                         <input
                             type="password"
                             value={password}

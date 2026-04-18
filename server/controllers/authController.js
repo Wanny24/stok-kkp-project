@@ -1,6 +1,13 @@
 const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { sendOTPEmail } = require('../utils/mailer');
+
+const validatePassword = (password) => {
+    // 8 karakter, huruf besar & kecil, angka, spesial karakter
+    const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return re.test(password);
+};
 
 const login = async (req, res) => {
     try {
@@ -161,98 +168,189 @@ const getOnlineUsers = async (req, res) => {
     }
 };
 
-const register = async (req, res) => {
+const requestOtp = async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { email, type } = req.body;
         
-        console.log('========================================');
-        console.log('REGISTER ATTEMPT:');
-        console.log('Username:', username);
-        console.log('========================================');
-        
-        // Validasi input
-        if (!username || !password) {
-            return res.status(400).json({
-                success: false,
-                message: 'Username dan password harus diisi'
-            });
+        if (!email || !type) {
+            return res.status(400).json({ success: false, message: 'Email dan tipe operasi harus diisi' });
         }
-        
-        if (password.length < 4) {
-            return res.status(400).json({
-                success: false,
-                message: 'Password minimal 4 karakter'
-            });
-        }
-        
-        // Cek apakah username sudah ada di users
-        const existingUser = await db.query(
-            'SELECT id FROM users WHERE username = ?', 
-            [username]
-        );
-        
-        if (existingUser.length > 0) {
-            console.log('Username already exists in users');
-            return res.status(400).json({ 
-                success: false,
-                message: 'Username sudah terdaftar' 
-            });
-        }
-        
-        // Cek apakah sudah pernah registrasi dan pending
-        const existingPending = await db.query(
-            'SELECT id FROM pending_registrations WHERE username = ?', 
-            [username]
-        );
-        
-        if (existingPending.length > 0) {
-            console.log('Username already pending');
-            return res.status(400).json({ 
-                success: false,
-                message: 'Username sudah pernah mendaftar, menunggu persetujuan owner' 
-            });
-        }
-        
-        // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
-        console.log('Password hashed successfully');
-        
-        // Insert ke pending_registrations
-        const result = await db.query(
-            'INSERT INTO pending_registrations (username, password) VALUES (?, ?)',
-            [username, hashedPassword]
-        );
-        
-        console.log('Insert success, ID:', result.insertId);
 
-        // Tambah notifikasi untuk owner
-        await db.query(
-            'INSERT INTO notifications (username, title, message, type, is_read, created_at) VALUES (?, ?, ?, ?, 0, NOW())',
-            ['owner', 'Karyawan Baru mendaftar', `Karyawan baru mendaftar dengan username ${username}, menunggu persetujuan.`, 'info']
-        );
-        
-        // Kirim response sukses
-        res.status(200).json({ 
-            success: true,
-            message: 'Pendaftaran berhasil, menunggu persetujuan owner',
-            data: {
-                username: username,
-                id: result.insertId
+        // Cek email jika mode register
+        if (type === 'register') {
+            const existingEmail = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+            if (existingEmail.length > 0) {
+                return res.status(400).json({ success: false, message: 'Email sudah terdaftar' });
             }
-        });
+        }
+
+        // Cek email jika mode reset password
+        if (type === 'reset') {
+            const user = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+            if (user.length === 0) {
+                return res.status(404).json({ success: false, message: 'Email tidak ditemukan' });
+            }
+        }
+
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
         
-        console.log('REGISTER SUCCESS for user:', username);
-        console.log('========================================\n');
+        // Hapus OTP lama yang belum expired untuk email tersebut
+        await db.query('DELETE FROM otps WHERE email = ? AND type = ?', [email, type]);
         
+        // Expiration = 10 minutes
+        const expiresAt = new Date(Date.now() + 10 * 60000);
+        
+        // Insert DB
+        await db.query('INSERT INTO otps (email, otp, type, expires_at) VALUES (?, ?, ?, ?)', [
+            email, otp, type, expiresAt
+        ]);
+
+        // Send Email
+        await sendOTPEmail(email, otp, type);
+
+        res.json({ success: true, message: 'OTP berhasil dikirim ke email' });
     } catch (error) {
-        console.error('========================================');
-        console.error('REGISTER ERROR:', error);
-        console.error('========================================\n');
-        res.status(500).json({ 
-            success: false,
-            message: 'Terjadi kesalahan pada server: ' + error.message 
-        });
+        console.error('requestOtp error:', error);
+        res.status(500).json({ success: false, message: 'Gagal memproses permintaan OTP' });
     }
 };
 
-module.exports = { login, logout, getOnlineUsers, register };
+const register = async (req, res) => {
+    try {
+        const { username, email, password, otp } = req.body;
+        
+        // Validasi input dasar
+        if (!username || !email || !password || !otp) {
+            return res.status(400).json({ success: false, message: 'Semua field wajib diisi' });
+        }
+        
+        // Validasi keunikan
+        const existingUsername = await db.query('SELECT id FROM users WHERE username = ?', [username]);
+        if (existingUsername.length > 0) {
+            return res.status(400).json({ success: false, message: 'Username sudah digunakan' });
+        }
+        
+        const existingEmail = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+        if (existingEmail.length > 0) {
+            return res.status(400).json({ success: false, message: 'Email sudah terdaftar' });
+        }
+
+        // Validasi password kuat
+        if (!validatePassword(password)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Password harus minimal 8 karakter, mengandung huruf besar, huruf kecil, angka, dan karakter spesial' 
+            });
+        }
+        
+        // Verifikasi OTP
+        const otpRecord = await db.query('SELECT * FROM otps WHERE email = ? AND type = "register" AND otp = ?', [email, otp]);
+        
+        if (otpRecord.length === 0) {
+            return res.status(400).json({ success: false, message: 'OTP tidak valid' });
+        }
+        
+        if (new Date() > new Date(otpRecord[0].expires_at)) {
+            return res.status(400).json({ success: false, message: 'OTP sudah kadaluarsa' });
+        }
+
+        // OTP Valid. Hapus dari database otps
+        await db.query('DELETE FROM otps WHERE id = ?', [otpRecord[0].id]);
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        // Insert langsung ke tabel users dengan status 'active' (bypass approval)
+        const result = await db.query(
+            'INSERT INTO users (username, password, email, role, status) VALUES (?, ?, ?, ?, ?)',
+            [username, hashedPassword, email, 'karyawan', 'active']
+        );
+        
+        // Tambah notifikasi untuk owner
+        await db.query(
+            'INSERT INTO notifications (username, title, message, type, is_read, created_at) VALUES (?, ?, ?, ?, 0, NOW())',
+            ['owner', 'Karyawan Baru Telah Mendaftar', `Karyawan baru bergabung dengan username ${username}.`, 'info']
+        );
+
+        // Langsung generate token untuk auto-login
+        const token = jwt.sign(
+            { id: result.insertId, username: username, role: 'karyawan' },
+            process.env.JWT_SECRET || 'stok_kkp_super_secret_key_2024',
+            { expiresIn: '24h' }
+        );
+        
+        await db.query('DELETE FROM user_sessions WHERE user_id = ?', [result.insertId]);
+        await db.query(
+            'INSERT INTO user_sessions (user_id, token, last_activity, is_online) VALUES (?, ?, NOW(), 1)',
+            [result.insertId, token]
+        );
+        
+        // Kirim response sukses & token
+        res.status(200).json({ 
+            success: true,
+            message: 'Pendaftaran berhasil, Anda otomatis masuk.',
+            token: token,
+            user: {
+                id: result.insertId,
+                username: username,
+                role: 'karyawan'
+            }
+        });
+        
+    } catch (error) {
+        console.error('REGISTER ERROR:', error);
+        res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server' });
+    }
+};
+
+const resetPassword = async (req, res) => {
+    try {
+        const { email, password, otp } = req.body;
+
+        if (!email || !password || !otp) {
+            return res.status(400).json({ success: false, message: 'Semua field wajib diisi' });
+        }
+
+        // Validasi password kuat
+        if (!validatePassword(password)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Password harus minimal 8 karakter, mengandung huruf besar, huruf kecil, angka, dan karakter spesial' 
+            });
+        }
+
+        // Verifikasi OTP
+        const otpRecord = await db.query('SELECT * FROM otps WHERE email = ? AND type = "reset" AND otp = ?', [email, otp]);
+        
+        if (otpRecord.length === 0) {
+            return res.status(400).json({ success: false, message: 'OTP tidak valid' });
+        }
+        
+        if (new Date() > new Date(otpRecord[0].expires_at)) {
+            return res.status(400).json({ success: false, message: 'OTP sudah kadaluarsa' });
+        }
+
+        // OTP Valid. Hapus dari database otps
+        await db.query('DELETE FROM otps WHERE id = ?', [otpRecord[0].id]);
+
+        // Hash password baru
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Update user
+        await db.query('UPDATE users SET password = ? WHERE email = ?', [hashedPassword, email]);
+
+        // Putuskan koneksi dari session lama jika dia login
+        const user = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+        if (user.length > 0) {
+            await db.query('DELETE FROM user_sessions WHERE user_id = ?', [user[0].id]);
+        }
+
+        res.json({ success: true, message: 'Password berhasil direset. Silakan login dengan password baru.' });
+    } catch (error) {
+        console.error('RESET PASSWORD ERROR:', error);
+        res.status(500).json({ success: false, message: 'Gagal memproses reset password' });
+    }
+};
+
+module.exports = { login, logout, getOnlineUsers, register, requestOtp, resetPassword };

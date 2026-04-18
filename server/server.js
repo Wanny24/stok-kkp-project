@@ -50,12 +50,31 @@ async function autoMigrate() {
                 id INT PRIMARY KEY AUTO_INCREMENT,
                 username VARCHAR(100) UNIQUE NOT NULL,
                 password VARCHAR(255) NOT NULL,
+                email VARCHAR(255) UNIQUE DEFAULT NULL,
                 role ENUM('owner', 'karyawan') NOT NULL,
                 status ENUM('active', 'inactive') DEFAULT 'active',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
         console.log('✓ Table users ready');
+
+        try {
+            await connection.execute('ALTER TABLE users ADD COLUMN email VARCHAR(255) UNIQUE DEFAULT NULL');
+            console.log('✓ Column email added to users');
+        } catch (e) {}
+
+        // 1.5. Tabel otps
+        await connection.execute(`
+            CREATE TABLE IF NOT EXISTS otps (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                email VARCHAR(255) NOT NULL,
+                otp VARCHAR(6) NOT NULL,
+                type ENUM('register', 'reset') NOT NULL,
+                expires_at DATETIME NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        console.log('✓ Table otps ready');
 
         // 2. Tabel pending_registrations
         await connection.execute(`
