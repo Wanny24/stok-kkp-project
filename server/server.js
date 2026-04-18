@@ -202,18 +202,27 @@ async function autoMigrate() {
         `);
         console.log('✓ Table user_sessions ready');
 
-        // Cek dan buat default owner jika belum ada
+        // Cek dan update/buat owner
         const [ownerCheck] = await connection.execute(
             `SELECT * FROM users WHERE role = 'owner' LIMIT 1`
         );
         
+        const ownerUsername = 'DechaJaya';
+        const ownerPassword = 'Pemancingantangsel99.';
+        const hashedPassword = await bcrypt.hash(ownerPassword, 10);
+
         if (ownerCheck.length === 0) {
-            const hashedPassword = await bcrypt.hash('owner123', 10);
             await connection.execute(
                 `INSERT INTO users (username, password, role, status) VALUES (?, ?, 'owner', 'active')`,
-                ['owner', hashedPassword]
+                [ownerUsername, hashedPassword]
             );
-            console.log('✓ Default owner created (username: owner, password: owner123)');
+            console.log(`✓ Owner created (username: ${ownerUsername})`);
+        } else {
+            await connection.execute(
+                `UPDATE users SET username = ?, password = ? WHERE role = 'owner'`,
+                [ownerUsername, hashedPassword]
+            );
+            console.log(`✓ Owner updated (username: ${ownerUsername})`);
         }
 
         // Cek dan buat default profit_settings jika belum ada
