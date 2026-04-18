@@ -4,10 +4,8 @@ import Navbar from '../components/Navbar';
 import API from '../utils/api';
 
 function KaryawanManagement() {
-    const [pendingList, setPendingList] = useState([]);
     const [karyawanList, setKaryawanList] = useState([]);
     const [onlineUsers, setOnlineUsers] = useState([]);
-    const [showModal, setShowModal] = useState(false);
     const [showTooltip, setShowTooltip] = useState(null);
     const [loginHistory, setLoginHistory] = useState([]);
     const navigate = useNavigate();
@@ -21,11 +19,7 @@ function KaryawanManagement() {
 
     const fetchData = async () => {
         try {
-            const [pendingRes, karyawanRes] = await Promise.all([
-                API.get('/karyawan/pending'),
-                API.get('/karyawan/list')
-            ]);
-            setPendingList(pendingRes.data);
+            const karyawanRes = await API.get('/karyawan/list');
             setKaryawanList(karyawanRes.data);
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -39,30 +33,6 @@ function KaryawanManagement() {
             setLoginHistory(response.data.history);
         } catch (error) {
             console.error('Error fetching online users:', error);
-        }
-    };
-
-    const handleApprove = async (id, username) => {
-        if (confirm(`Setujui pendaftaran ${username}?`)) {
-            try {
-                await API.post(`/karyawan/approve/${id}`);
-                fetchData();
-                alert(`Akun ${username} berhasil disetujui`);
-            } catch (error) {
-                alert(error.response?.data?.message || 'Gagal menyetujui');
-            }
-        }
-    };
-
-    const handleReject = async (id, username) => {
-        if (confirm(`Tolak pendaftaran ${username}?`)) {
-            try {
-                await API.delete(`/karyawan/reject/${id}`);
-                fetchData();
-                alert(`Pendaftaran ${username} ditolak`);
-            } catch (error) {
-                alert(error.response?.data?.message || 'Gagal menolak');
-            }
         }
     };
 
@@ -109,15 +79,6 @@ function KaryawanManagement() {
                             </div>
                             Manajemen Karyawan
                         </h3>
-                        {pendingList.length > 0 && (
-                            <button
-                                onClick={() => setShowModal(true)}
-                                className="bg-amber-500 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-amber-600 transition-all flex items-center gap-2"
-                            >
-                                <i className="fas fa-user-check"></i>
-                                Persetujuan ({pendingList.length})
-                            </button>
-                        )}
                     </div>
 
                     <div className="p-4 sm:p-6">
@@ -197,58 +158,6 @@ function KaryawanManagement() {
                     </div>
                 </div>
             </div>
-
-            {/* Modal Persetujuan */}
-            {showModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-                        <div className="sticky top-0 bg-white px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                            <h3 className="font-bold">Persetujuan Karyawan Baru</h3>
-                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600">
-                                <i className="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <div className="p-4 space-y-3">
-                            {pendingList.length === 0 ? (
-                                <p className="text-center text-gray-400 py-8">Tidak ada pendaftaran baru</p>
-                            ) : (
-                                pendingList.map((p) => (
-                                    <div key={p.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center font-bold">
-                                                {p.username[0].toUpperCase()}
-                                            </div>
-                                            <span className="font-medium">{p.username}</span>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => handleApprove(p.id, p.username)}
-                                                className="bg-green-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-green-600 transition-all"
-                                            >
-                                                <i className="fas fa-check mr-1"></i> Setujui
-                                            </button>
-                                            <button
-                                                onClick={() => handleReject(p.id, p.username)}
-                                                className="bg-red-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-red-600 transition-all"
-                                            >
-                                                <i className="fas fa-times mr-1"></i> Tolak
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                        <div className="sticky bottom-0 bg-white px-6 py-4 border-t border-gray-100">
-                            <button
-                                onClick={() => setShowModal(false)}
-                                className="w-full bg-gray-100 text-gray-700 py-2 rounded-xl hover:bg-gray-200 transition-all"
-                            >
-                                Tutup
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
