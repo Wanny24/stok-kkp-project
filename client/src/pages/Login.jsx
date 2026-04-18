@@ -16,18 +16,18 @@ function Login() {
 
         try {
             console.log('Login attempt:', username);
-            const response = await API.post('/auth/login', { 
-                username, 
-                password 
+            const response = await API.post('/auth/login', {
+                username,
+                password
             });
-            
+
             console.log('Response:', response.data);
-            
+
             if (response.data.token) {
                 localStorage.setItem('token', response.data.token);
                 localStorage.setItem('userRole', response.data.user.role);
                 localStorage.setItem('username', response.data.user.username);
-                
+
                 if (response.data.user.role === 'owner') {
                     navigate('/owner');
                 } else {
@@ -62,13 +62,13 @@ function Login() {
                 </div>
                 <h1 className="text-3xl font-bold mt-6">Selamat Datang</h1>
                 <p className="text-gray-500 mb-8">Login untuk mengelola stok & keuangan toko</p>
-                
+
                 {error && (
                     <div className="bg-red-50 text-red-600 p-3 rounded-xl mb-4 text-sm">
                         {error}
                     </div>
                 )}
-                
+
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
                         <label className="block text-xs font-semibold text-gray-600 uppercase mb-1">Username</label>
@@ -101,12 +101,9 @@ function Login() {
                         {!loading && <i className="fas fa-arrow-right"></i>}
                     </button>
                 </form>
-                
+
                 <div className="text-center mt-6">
                     <Link to="/register" className="text-blue-600 hover:underline">Daftar sebagai karyawan →</Link>
-                </div>
-                <div className="mt-5 p-3 bg-gray-100 rounded-xl text-center text-xs text-gray-500">
-                    <i className="fas fa-info-circle"></i> Demo: username <strong>owner</strong> / password <strong>owner</strong>
                 </div>
             </div>
         </div>
