@@ -25,7 +25,7 @@ function FloatingNotification() {
             let filteredNotif = data;
             if (!isOwner) {
                 filteredNotif = data.filter(n => 
-                    n.title === 'Stok Menipis' || n.title === 'Stok Habis'
+                    n.title === 'Stok Menipis' || n.title === 'Stok Habis' || n.title === 'Selamat Datang'
                 );
             }
             setNotifications(filteredNotif);

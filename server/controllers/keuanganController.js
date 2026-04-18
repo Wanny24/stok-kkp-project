@@ -176,8 +176,8 @@ const addNotification = async (username, title, message, type, barangId = null) 
 const getNotifications = async (req, res) => {
     try {
         const notifications = await db.query(
-            'SELECT * FROM notifications WHERE username = ? OR username = "system" ORDER BY created_at DESC LIMIT 50',
-            [req.user.username]
+            'SELECT * FROM notifications WHERE username = ? OR username = "system" OR (? = "owner" AND username = "owner") ORDER BY created_at DESC LIMIT 50',
+            [req.user.username, req.user.role]
         );
         res.json(notifications);
     } catch (error) {

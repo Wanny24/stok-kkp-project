@@ -280,6 +280,12 @@ const register = async (req, res) => {
             ['owner', 'Karyawan Baru Telah Mendaftar', `Karyawan baru bergabung dengan username ${username}.`, 'info']
         );
 
+        // Tambah notifikasi untuk karyawan baru
+        await db.query(
+            'INSERT INTO notifications (username, title, message, type, is_read, created_at) VALUES (?, ?, ?, ?, 0, NOW())',
+            [username, 'Selamat Datang', `Selamat Bergabung Di DechaJaya ${username}`, 'success']
+        );
+
         // Langsung generate token untuk auto-login
         const token = jwt.sign(
             { id: result.insertId, username: username, role: 'karyawan' },
