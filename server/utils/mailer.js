@@ -3,11 +3,15 @@ const nodemailer = require('nodemailer');
 // Konfigurasi transporter
 // Disarankan untuk menggunakan App Password jika memakai Gmail
 const transporter = nodemailer.createTransport({
-    service: 'gmail', // Anda bisa mengubahnya ke layanan lain seperti hostinger, dsb
+    service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER || '', // Masukkan di file .env
-        pass: process.env.EMAIL_PASS || ''  // Masukkan di file .env
-    }
+        user: process.env.EMAIL_USER || '',
+        pass: process.env.EMAIL_PASS || ''
+    },
+    // Tambahkan timeout agar tidak hang di server Railway yang membokir SMTP
+    connectionTimeout: 5000, 
+    greetingTimeout: 5000,
+    socketTimeout: 5000
 });
 
 /**
