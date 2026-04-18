@@ -53,8 +53,8 @@ const login = async (req, res) => {
             { expiresIn: '24h' }
         );
         
-        // Update session - matikan session lama
-        await db.query('UPDATE user_sessions SET is_online = 0 WHERE user_id = ?', [user.id]);
+        // Update session - hapus sesi lama agar tidak ada duplikat (hanya 1 sesi per user)
+        await db.query('DELETE FROM user_sessions WHERE user_id = ?', [user.id]);
         
         // Insert session baru
         await db.query(
@@ -95,7 +95,7 @@ const logout = async (req, res) => {
         const token = req.headers.authorization?.split(' ')[1];
         
         if (token) {
-            await db.query('UPDATE user_sessions SET is_online = 0 WHERE token = ?', [token]);
+            await db.query('DELETE FROM user_sessions WHERE token = ?', [token]);
         }
         
         res.json({ 
@@ -119,24 +119,23 @@ const getOnlineUsers = async (req, res) => {
                 u.id, 
                 u.username, 
                 u.role, 
-                MAX(us.is_online) as is_online, 
-                MAX(us.last_activity) as last_activity,
-                TIMESTAMPDIFF(MINUTE, MAX(us.last_activity), NOW()) as minutes_ago
+                us.is_online, 
+                us.last_activity,
+                TIMESTAMPDIFF(MINUTE, us.last_activity, NOW()) as minutes_ago
             FROM users u
             LEFT JOIN user_sessions us ON u.id = us.user_id
             WHERE u.role = 'karyawan'
-            GROUP BY u.id, u.username, u.role
             ORDER BY u.id DESC
         `);
         
         // Update offline status (5 menit tidak aktif = offline)
         for (const user of users) {
-            if (user.minutes_ago > 5 && user.is_online === 1) {
+            if (user.minutes_ago > 5 && user.is_online == 1) {
                 await db.query('UPDATE user_sessions SET is_online = 0 WHERE user_id = ?', [user.id]);
                 user.is_online = 0;
             }
             // Convert to boolean for frontend
-            user.is_online = user.is_online === 1;
+            user.is_online = user.is_online == 1;
         }
         
         // Get login history for tooltip
