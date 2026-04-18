@@ -207,9 +207,16 @@ const requestOtp = async (req, res) => {
         ]);
 
         // Send Email
-        await sendOTPEmail(email, otp, type);
+        const emailStatus = await sendOTPEmail(email, otp, type);
 
-        res.json({ success: true, message: 'OTP berhasil dikirim ke email' });
+        if (emailStatus && emailStatus.success === false) {
+             res.json({ 
+                success: true, 
+                message: `OTP tersimpan di DB, tapi Gagal dikirim ke email karena masalah server email (${emailStatus.error}). Anda dapat melihat OTP di tabel otps.` 
+             });
+        } else {
+             res.json({ success: true, message: 'OTP berhasil dikirim ke email' });
+        }
     } catch (error) {
         console.error('requestOtp error:', error);
         res.status(500).json({ success: false, message: 'Gagal memproses OTP: ' + error.message });

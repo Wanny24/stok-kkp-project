@@ -33,8 +33,8 @@ function Register() {
 
         setLoading(true);
         try {
-            await API.post('/auth/request-otp', { email, type: 'register' });
-            setMessage('Kode OTP telah dikirim ke email Anda. Silakan periksa kotak masuk atau folder spam.');
+            const response = await API.post('/auth/request-otp', { email, type: 'register' });
+            setMessage(response.data.message || 'Kode OTP telah dikirim ke email Anda. Silakan periksa kotak masuk atau folder spam.');
             setStep(2);
         } catch (err) {
             setError(err.response?.data?.message || 'Gagal mengirim OTP');

@@ -26,8 +26,8 @@ function ResetPassword() {
 
         setLoading(true);
         try {
-            await API.post('/auth/request-otp', { email, type: 'reset' });
-            setMessage('Kode OTP untuk reset password telah dikirim ke email Anda.');
+            const response = await API.post('/auth/request-otp', { email, type: 'reset' });
+            setMessage(response.data.message || 'Kode OTP untuk reset password telah dikirim ke email Anda.');
             setStep(2);
         } catch (err) {
             setError(err.response?.data?.message || 'Gagal mengirim OTP');

@@ -57,10 +57,10 @@ const sendOTPEmail = async (to, otp, type) => {
 
     try {
         await transporter.sendMail(mailOptions);
-        return true;
+        return { success: true };
     } catch (error) {
         console.error('Error mengirim email:', error);
-        throw new Error('Gagal mengirim email verifikasi');
+        return { success: false, error: error.message };
     }
 };
 
