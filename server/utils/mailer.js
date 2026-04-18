@@ -3,12 +3,12 @@ const nodemailer = require('nodemailer');
 // Konfigurasi transporter
 // Disarankan untuk menggunakan App Password jika memakai Gmail
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp-relay.brevo.com',
+    port: 2525, // Port khusus yang dijamin tidak diblokir oleh Railway!
     auth: {
-        user: process.env.EMAIL_USER || '',
-        pass: process.env.EMAIL_PASS || ''
+        user: 'a88158001@smtp-brevo.com',
+        pass: '1ymIYh5ftCDXBpNx'
     },
-    // Tambahkan timeout agar tidak hang di server Railway yang membokir SMTP
     connectionTimeout: 5000, 
     greetingTimeout: 5000,
     socketTimeout: 5000
@@ -21,12 +21,6 @@ const transporter = nodemailer.createTransport({
  * @param {string} type - 'register' atau 'reset'
  */
 const sendOTPEmail = async (to, otp, type) => {
-    // Abaikan jika env email belum disetel (untuk testing tanpa error crash)
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-        console.warn('EMAIL_USER atau EMAIL_PASS belum diatur di .env. Email OTP tidak benar-benar terkirim. OTP:', otp);
-        return true; 
-    }
-
     let subject = '';
     let text = '';
     let html = '';
@@ -52,7 +46,7 @@ const sendOTPEmail = async (to, otp, type) => {
     }
 
     const mailOptions = {
-        from: `"Stok Decha Jaya" <${process.env.EMAIL_USER}>`,
+        from: `"Stok Decha Jaya" <wannsart@gmail.com>`,
         to: to,
         subject: subject,
         text: text,
