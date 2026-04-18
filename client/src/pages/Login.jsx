@@ -58,7 +58,7 @@ function Login() {
                         <i className="fas fa-boxes text-white relative z-10"></i>
                         <div className="absolute top-[-10px] right-[-10px] w-6 h-6 bg-blue-600 rounded-full"></div>
                     </div>
-                    <span className="font-extrabold text-2xl tracking-tight">Stok<span className="text-blue-600">KKP</span></span>
+                    <span className="font-extrabold text-2xl tracking-tight">Stok<span className="text-blue-600">DechaJaya</span></span>
                 </div>
                 <h1 className="text-3xl font-bold mt-6">Selamat Datang</h1>
                 <p className="text-gray-500 mb-8">Login untuk mengelola stok & keuangan toko</p>

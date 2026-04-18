@@ -84,7 +84,7 @@ const updateBiaya = async (req, res) => {
         await db.query('UPDATE biaya SET jumlah = ? WHERE jenis = ?', [operasional, 'operasional']);
         
         const konsumsiTgl = konsumsi_tanggal ? new Date(konsumsi_tanggal).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-        const pperasionalTgl = operasional_tanggal ? new Date(operasional_tanggal).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+        const operasionalTgl = operasional_tanggal ? new Date(operasional_tanggal).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
 
         await db.query(
             'INSERT INTO biaya_history (jenis, jumlah, changed_by, keterangan, tanggal) VALUES (?, ?, ?, ?, ?)',
@@ -92,7 +92,7 @@ const updateBiaya = async (req, res) => {
         );
         await db.query(
             'INSERT INTO biaya_history (jenis, jumlah, changed_by, keterangan, tanggal) VALUES (?, ?, ?, ?, ?)',
-            ['operasional', operasional, req.user.username, operasional_keterangan || '-', pperasionalTgl]
+            ['operasional', operasional, req.user.username, operasional_keterangan || '-', operasionalTgl]
         );
         
         await addActivityLog(

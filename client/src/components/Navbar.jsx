@@ -25,7 +25,7 @@ function Navbar({ role }) {
                         <i className="fas fa-boxes text-white relative z-10 text-sm"></i>
                         <div className="absolute -top-2 -right-2 w-5 h-5 bg-blue-600 rounded-full"></div>
                     </div>
-                    <span className="font-extrabold text-lg sm:text-xl tracking-tight">Stok<span className="text-blue-600">KKP</span></span>
+                    <span className="font-extrabold text-lg sm:text-xl tracking-tight">Stok<span className="text-blue-600">DechaJaya</span></span>
                 </div>
                 
                 <div className="flex items-center gap-2 sm:gap-4">

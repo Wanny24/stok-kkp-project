@@ -13,6 +13,15 @@ function Stok() {
     const [showMinStockModal, setShowMinStockModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [newMinStock, setNewMinStock] = useState(5);
+    const [actionModal, setActionModal] = useState({
+        show: false,
+        type: '', // 'tambah', 'kurang', 'modal', 'harga'
+        item: null
+    });
+    const [actionData, setActionData] = useState({
+        value1: '',
+        value2: ''
+    });
     const [formData, setFormData] = useState({
         nama: '',
         harga_jual: '',
@@ -111,62 +120,55 @@ function Stok() {
         }
     };
 
-    const handleTambahStok = async (id, currentStock) => {
-        const quantity = parseInt(prompt('Jumlah stok yang ditambahkan:', '1'));
-        if (quantity && quantity > 0) {
-            try {
-                await API.put('/inventory/stock', { id, type: 'tambah', quantity });
-                fetchInventory();
-                alert('Stok berhasil ditambahkan');
-            } catch (error) {
-                alert(error.response?.data?.message || 'Gagal menambah stok');
-            }
+    const openActionModal = (type, item) => {
+        setActionModal({ show: true, type, item });
+        if (type === 'tambah' || type === 'kurang') {
+            setActionData({ value1: '1', value2: '' });
+        } else if (type === 'harga') {
+            setActionData({ value1: item.harga_jual.toString(), value2: '' });
+        } else if (type === 'modal') {
+            setActionData({ value1: '5', value2: item.average_cost.toString() });
         }
     };
 
-    const handleKurangiStok = async (id, currentStock) => {
-        const quantity = parseInt(prompt('Jumlah stok yang dikurangi:', '1'));
-        if (quantity && quantity > 0) {
-            if (currentStock < quantity) {
-                alert('Stok tidak cukup');
-                return;
-            }
-            try {
-                await API.put('/inventory/stock', { id, type: 'kurang', quantity });
-                fetchInventory();
-                alert('Stok berhasil dikurangi');
-            } catch (error) {
-                alert(error.response?.data?.message || 'Gagal mengurangi stok');
-            }
-        }
-    };
-
-    const handleUpdateModal = async (id, currentAvgCost) => {
-        const newQuantity = parseInt(prompt('Jumlah pembelian baru:', '5'));
-        if (newQuantity && newQuantity > 0) {
-            const newUnitCost = parseFloat(prompt('Harga beli per unit (Rp):', currentAvgCost));
-            if (newUnitCost && newUnitCost > 0) {
-                try {
+    const handleActionSubmit = async (e) => {
+        e.preventDefault();
+        const { type, item } = actionModal;
+        const id = item.id;
+        
+        try {
+            if (type === 'tambah') {
+                const quantity = parseInt(actionData.value1);
+                if (quantity > 0) {
+                    await API.put('/inventory/stock', { id, type: 'tambah', quantity });
+                    alert('Stok berhasil ditambahkan');
+                }
+            } else if (type === 'kurang') {
+                const quantity = parseInt(actionData.value1);
+                if (quantity > 0) {
+                    if (item.stock < quantity) return alert('Stok tidak cukup');
+                    await API.put('/inventory/stock', { id, type: 'kurang', quantity });
+                    alert('Stok berhasil dikurangi');
+                }
+            } else if (type === 'modal') {
+                const newQuantity = parseInt(actionData.value1);
+                const newUnitCost = parseFloat(actionData.value2);
+                if (newQuantity > 0 && newUnitCost > 0) {
                     await API.put('/inventory/average-cost', { id, newQuantity, newUnitCost });
-                    fetchInventory();
                     alert('Modal berhasil diupdate');
-                } catch (error) {
-                    alert(error.response?.data?.message || 'Gagal update modal');
+                }
+            } else if (type === 'harga') {
+                const newPrice = parseFloat(actionData.value1);
+                if (newPrice > 0) {
+                    await API.put('/inventory/harga-jual', { id, harga_jual: newPrice });
+                    alert('Harga jual berhasil diupdate');
                 }
             }
-        }
-    };
-
-    const handleUpdateHargaJual = async (id, currentPrice) => {
-        const newPrice = parseFloat(prompt('Harga jual baru (Rp):', currentPrice));
-        if (newPrice && newPrice > 0) {
-            try {
-                await API.put('/inventory/harga-jual', { id, harga_jual: newPrice });
-                fetchInventory();
-                alert('Harga jual berhasil diupdate');
-            } catch (error) {
-                alert(error.response?.data?.message || 'Gagal update harga jual');
-            }
+            
+            fetchInventory();
+            setActionModal({ show: false, type: '', item: null });
+        } catch (error) {
+            alert(error.response?.data?.message || 'Aksi gagal dilakukan');
         }
     };
 
@@ -306,28 +308,28 @@ function Stok() {
                                                 <td className="px-4 py-3">
                                                     <div className="flex gap-1.5">
                                                         <button
-                                                            onClick={() => handleTambahStok(item.id, item.stock)}
+                                                            onClick={() => openActionModal('tambah', item)}
                                                             className="bg-green-50 text-green-600 px-2 py-1 rounded-lg text-xs font-medium hover:bg-green-600 hover:text-white transition-all"
                                                             title="Tambah Stok"
                                                         >
                                                             <i className="fas fa-plus"></i>
                                                         </button>
                                                         <button
-                                                            onClick={() => handleKurangiStok(item.id, item.stock)}
+                                                            onClick={() => openActionModal('kurang', item)}
                                                             className="bg-amber-50 text-amber-600 px-2 py-1 rounded-lg text-xs font-medium hover:bg-amber-600 hover:text-white transition-all"
                                                             title="Kurangi Stok"
                                                         >
                                                             <i className="fas fa-minus"></i>
                                                         </button>
                                                         <button
-                                                            onClick={() => handleUpdateModal(item.id, item.average_cost)}
+                                                            onClick={() => openActionModal('modal', item)}
                                                             className="bg-blue-50 text-blue-600 px-2 py-1 rounded-lg text-xs font-medium hover:bg-blue-600 hover:text-white transition-all"
                                                             title="Update Modal"
                                                         >
                                                             <i className="fas fa-chart-line"></i>
                                                         </button>
                                                         <button
-                                                            onClick={() => handleUpdateHargaJual(item.id, item.harga_jual)}
+                                                            onClick={() => openActionModal('harga', item)}
                                                             className="bg-purple-50 text-purple-600 px-2 py-1 rounded-lg text-xs font-medium hover:bg-purple-600 hover:text-white transition-all"
                                                             title="Update Harga"
                                                         >
@@ -412,25 +414,25 @@ function Stok() {
                                         
                                         <div className="flex flex-wrap gap-2 pt-2">
                                             <button
-                                                onClick={() => handleTambahStok(item.id, item.stock)}
+                                                onClick={() => openActionModal('tambah', item)}
                                                 className="flex-1 bg-green-50 text-green-600 py-2 rounded-xl text-sm font-medium hover:bg-green-600 hover:text-white transition-all"
                                             >
                                                 <i className="fas fa-plus mr-1"></i> Tambah
                                             </button>
                                             <button
-                                                onClick={() => handleKurangiStok(item.id, item.stock)}
+                                                onClick={() => openActionModal('kurang', item)}
                                                 className="flex-1 bg-amber-50 text-amber-600 py-2 rounded-xl text-sm font-medium hover:bg-amber-600 hover:text-white transition-all"
                                             >
                                                 <i className="fas fa-minus mr-1"></i> Kurang
                                             </button>
                                             <button
-                                                onClick={() => handleUpdateModal(item.id, item.average_cost)}
+                                                onClick={() => openActionModal('modal', item)}
                                                 className="flex-1 bg-blue-50 text-blue-600 py-2 rounded-xl text-sm font-medium hover:bg-blue-600 hover:text-white transition-all"
                                             >
                                                 <i className="fas fa-chart-line mr-1"></i> Modal
                                             </button>
                                             <button
-                                                onClick={() => handleUpdateHargaJual(item.id, item.harga_jual)}
+                                                onClick={() => openActionModal('harga', item)}
                                                 className="flex-1 bg-purple-50 text-purple-600 py-2 rounded-xl text-sm font-medium hover:bg-purple-600 hover:text-white transition-all"
                                             >
                                                 <i className="fas fa-tag mr-1"></i> Harga
@@ -580,6 +582,112 @@ function Stok() {
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Action Modals */}
+            {actionModal.show && actionModal.item && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-md">
+                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                            <h3 className="font-bold">
+                                {actionModal.type === 'tambah' && 'Tambah Stok'}
+                                {actionModal.type === 'kurang' && 'Kurangi Stok'}
+                                {actionModal.type === 'harga' && 'Update Harga Jual'}
+                                {actionModal.type === 'modal' && 'Update Modal'}
+                            </h3>
+                            <button onClick={() => setActionModal({ show: false, type: '', item: null })} className="text-gray-400 hover:text-gray-600">
+                                <i className="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <form onSubmit={handleActionSubmit} className="p-6">
+                            <p className="text-gray-600 mb-4">
+                                Produk: <span className="font-semibold">{actionModal.item.nama}</span>
+                            </p>
+                            
+                            {(actionModal.type === 'tambah' || actionModal.type === 'kurang') && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Jumlah Stok {actionModal.type === 'tambah' ? 'Tambahan' : 'Dikurangi'}
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={actionData.value1}
+                                        onChange={(e) => setActionData({ ...actionData, value1: e.target.value })}
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400"
+                                        min="1"
+                                        required
+                                    />
+                                    <p className="text-xs text-gray-400 mt-2">
+                                        Stok saat ini: {actionModal.item.stock}
+                                    </p>
+                                </div>
+                            )}
+
+                            {actionModal.type === 'harga' && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Harga Jual Baru (Rp)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={actionData.value1}
+                                        onChange={(e) => setActionData({ ...actionData, value1: e.target.value })}
+                                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400"
+                                        min="1"
+                                        required
+                                    />
+                                </div>
+                            )}
+
+                            {actionModal.type === 'modal' && (
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Jumlah Pembelian Baru
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={actionData.value1}
+                                            onChange={(e) => setActionData({ ...actionData, value1: e.target.value })}
+                                            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400"
+                                            min="1"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Harga Beli Per Unit Baru (Rp)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={actionData.value2}
+                                            onChange={(e) => setActionData({ ...actionData, value2: e.target.value })}
+                                            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-400"
+                                            min="1"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="flex gap-3 mt-6">
+                                <button
+                                    type="button"
+                                    onClick={() => setActionModal({ show: false, type: '', item: null })}
+                                    className="flex-1 px-4 py-2 border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50 transition-all"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all"
+                                >
+                                    Simpan
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}
