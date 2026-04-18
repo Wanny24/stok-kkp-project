@@ -64,10 +64,11 @@ const getKaryawanList = async (req, res) => {
     try {
         const karyawan = await db.query(`
             SELECT u.id, u.username, u.role, u.status, 
-                   us.is_online, us.last_activity
+                   MAX(us.is_online) as is_online, MAX(us.last_activity) as last_activity
             FROM users u
             LEFT JOIN user_sessions us ON u.id = us.user_id
             WHERE u.role = 'karyawan'
+            GROUP BY u.id, u.username, u.role, u.status
             ORDER BY u.id DESC
         `);
         

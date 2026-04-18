@@ -119,13 +119,13 @@ const getOnlineUsers = async (req, res) => {
                 u.id, 
                 u.username, 
                 u.role, 
-                us.is_online, 
-                us.last_activity,
-                TIMESTAMPDIFF(MINUTE, us.last_activity, NOW()) as minutes_ago
+                MAX(us.is_online) as is_online, 
+                MAX(us.last_activity) as last_activity,
+                TIMESTAMPDIFF(MINUTE, MAX(us.last_activity), NOW()) as minutes_ago
             FROM users u
-            LEFT JOIN user_sessions us ON u.id = us.user_id AND us.is_online = 1
+            LEFT JOIN user_sessions us ON u.id = us.user_id
             WHERE u.role = 'karyawan'
-            GROUP BY u.id
+            GROUP BY u.id, u.username, u.role
             ORDER BY u.id DESC
         `);
         
