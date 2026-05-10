@@ -6,22 +6,38 @@ let pool = null;
 async function getPool() {
     if (!pool) {
         try {
-            // Railway akan memberikan MYSQL_URL secara otomatis
-            const mysqlUrl = process.env.MYSQL_URL;
-            
-            if (!mysqlUrl) {
-                console.error('❌ MYSQL_URL not found in environment variables');
-                throw new Error('Database URL not configured');
-            }
-            
-            console.log('📦 Connecting to database...');
-            pool = mysql.createPool({
-                uri: mysqlUrl,
+            // Coba ambil dari konfigurasi individual (seperti FreeDB.tech) atau fallback ke MYSQL_URL
+            const dbConfig = {
+                host: process.env.DB_HOST,
+                user: process.env.DB_USER,
+                password: process.env.DB_PASSWORD,
+                database: process.env.DB_NAME,
+                port: process.env.DB_PORT || 3306,
                 waitForConnections: true,
                 connectionLimit: 10,
                 queueLimit: 0,
                 enableKeepAlive: true
-            });
+            };
+
+            const mysqlUrl = process.env.MYSQL_URL;
+
+            console.log('📦 Connecting to database...');
+            if (dbConfig.host && dbConfig.user && dbConfig.database) {
+                // Koneksi manual pakai kredensial terpisah
+                pool = mysql.createPool(dbConfig);
+            } else if (mysqlUrl) {
+                // Fallback untuk URL string
+                pool = mysql.createPool({
+                    uri: mysqlUrl,
+                    waitForConnections: true,
+                    connectionLimit: 10,
+                    queueLimit: 0,
+                    enableKeepAlive: true
+                });
+            } else {
+                console.error('❌ Database credentials not found in environment variables');
+                throw new Error('Database credentials not configured');
+            }
             
             // Test connection
             const connection = await pool.getConnection();

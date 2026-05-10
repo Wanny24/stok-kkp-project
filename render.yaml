@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: stok-kkp-backend
+    rootDir: server
+    env: node
+    plan: free
+    region: singapore # You can change to ohio or frankfurt if preferred
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: JWT_SECRET
+        sync: false
+      - key: CHACHA20_KEY
+        sync: false
+      - key: TWOFISH_KEY
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_PORT
+        value: "3306"
