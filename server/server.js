@@ -265,9 +265,17 @@ app.use((err, req, res, next) => {
 });
 
 // === START SERVER DENGAN AUTO MIGRATION ===
-autoMigrate().then(() => {
-    app.listen(PORT, '0.0.0.0', () => {
-        console.log(`🚀 Server running on port ${PORT}`);
-        console.log(`🌍 Health check: http://localhost:${PORT}/health`);
+if (process.env.NODE_ENV !== 'production' || process.env.VERCEL !== '1') {
+    // Jalankan server lokal seperti biasa
+    autoMigrate().then(() => {
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`🚀 Server running on port ${PORT}`);
+            console.log(`🌍 Health check: http://localhost:${PORT}/health`);
+        });
     });
-});
+} else {
+    // Untuk Vercel Serverless, jalankan migrasi lalu kembalikan app
+    autoMigrate().catch(console.error);
+}
+
+module.exports = app;
