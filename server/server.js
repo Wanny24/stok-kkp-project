@@ -31,14 +31,12 @@ async function autoMigrate() {
     let connection;
     try {
         // Koneksi ke database
-        const dbConfig = process.env.MYSQL_URL ? 
-            { uri: process.env.MYSQL_URL } :
-            {
-                host: process.env.DB_HOST || 'localhost',
-                user: process.env.DB_USER || 'root',
-                password: process.env.DB_PASSWORD || '',
-                database: process.env.DB_NAME || 'stok_kkp_db'
-            };
+        const dbConfig = process.env.MYSQL_URL || {
+            host: process.env.DB_HOST || 'localhost',
+            user: process.env.DB_USER || 'root',
+            password: process.env.DB_PASSWORD || '',
+            database: process.env.DB_NAME || 'stok_kkp_db'
+        };
         
         console.log('📦 Checking database connection...');
         connection = await mysql.createConnection(dbConfig);

@@ -27,13 +27,7 @@ async function getPool() {
                 pool = mysql.createPool(dbConfig);
             } else if (mysqlUrl) {
                 // Fallback untuk URL string
-                pool = mysql.createPool({
-                    uri: mysqlUrl,
-                    waitForConnections: true,
-                    connectionLimit: 10,
-                    queueLimit: 0,
-                    enableKeepAlive: true
-                });
+                pool = mysql.createPool(mysqlUrl);
             } else {
                 console.error('❌ Database credentials not found in environment variables');
                 throw new Error('Database credentials not configured');
