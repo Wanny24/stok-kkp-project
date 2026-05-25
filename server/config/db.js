@@ -13,10 +13,11 @@ async function getPool() {
                 database: process.env.DB_NAME,
                 port: parseInt(process.env.DB_PORT) || 3306,
                 waitForConnections: true,
-                connectionLimit: 3,   // Clever Cloud free = max 5, pakai 3 agar aman
+                connectionLimit: 1,   // Vercel Serverless = pakai 1 agar tidak bentrok dengan instance lain
+                maxIdle: 1,           // Tutup koneksi idle secepatnya
+                idleTimeout: 10000,   // 10 detik idle langsung putus
                 queueLimit: 10,
-                enableKeepAlive: true,
-                keepAliveInitialDelay: 10000,
+                enableKeepAlive: false, // JANGAN keepAlive di Serverless Vercel
                 connectTimeout: 10000
             };
 
