@@ -6,27 +6,26 @@ let pool = null;
 async function getPool() {
     if (!pool) {
         try {
-            // Coba ambil dari konfigurasi individual (seperti FreeDB.tech) atau fallback ke MYSQL_URL
             const dbConfig = {
                 host: process.env.DB_HOST,
                 user: process.env.DB_USER,
                 password: process.env.DB_PASSWORD,
                 database: process.env.DB_NAME,
-                port: process.env.DB_PORT || 3306,
+                port: parseInt(process.env.DB_PORT) || 3306,
                 waitForConnections: true,
-                connectionLimit: 10,
-                queueLimit: 0,
-                enableKeepAlive: true
+                connectionLimit: 3,   // Clever Cloud free = max 5, pakai 3 agar aman
+                queueLimit: 10,
+                enableKeepAlive: true,
+                keepAliveInitialDelay: 10000,
+                connectTimeout: 10000
             };
 
             const mysqlUrl = process.env.MYSQL_URL;
 
             console.log('📦 Connecting to database...');
             if (dbConfig.host && dbConfig.user && dbConfig.database) {
-                // Koneksi manual pakai kredensial terpisah
                 pool = mysql.createPool(dbConfig);
             } else if (mysqlUrl) {
-                // Fallback untuk URL string
                 pool = mysql.createPool(mysqlUrl);
             } else {
                 console.error('❌ Database credentials not found in environment variables');
@@ -40,6 +39,7 @@ async function getPool() {
             
             console.log('✅ Database connected successfully');
         } catch (error) {
+            pool = null; // Reset pool agar bisa reconnect pada request berikutnya
             console.error('❌ Database connection failed:', error.message);
             throw error;
         }
