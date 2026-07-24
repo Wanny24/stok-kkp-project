@@ -1,13 +1,19 @@
 const mysql = require('mysql2/promise');
+require('dotenv').config();
 
 async function testDB() {
     try {
-        const connection = await mysql.createConnection({
-            host: 'localhost',
-            user: 'root',
-            password: '', // Ganti dengan password MySQL Anda
-            database: 'stok_kkp_db'
-        });
+        const dbConfig = {
+            host: process.env.DB_HOST || 'localhost',
+            user: process.env.DB_USER || 'root',
+            password: process.env.DB_PASSWORD || '',
+            database: process.env.DB_NAME || 'stok_kkp_db',
+            port: parseInt(process.env.DB_PORT) || 3306,
+            connectTimeout: 10000
+        };
+
+        console.log(`Connecting to database at ${dbConfig.host}:${dbConfig.port}...`);
+        const connection = await mysql.createConnection(dbConfig);
         
         console.log('✅ Koneksi database BERHASIL!');
         
