@@ -16,7 +16,7 @@ function OwnerDashboard() {
         const hours = new Date().getHours();
         if (hours < 12) setGreeting('Selamat Pagi');
         else if (hours < 15) setGreeting('Selamat Siang');
-        else if (hours < 18) setGreeting('Selamat Sore');
+        else if (hours < 18) setGreeting('Selamat Malam');
         else setGreeting('Selamat Malam');
 
         const updateTime = () => {
