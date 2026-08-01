@@ -51,62 +51,76 @@ function Login() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-6" style={{ background: 'var(--ink)' }}>
-            <div className="w-full max-w-md bg-white rounded-3xl p-10 shadow-2xl relative z-10">
+        <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-[#070913]">
+            {/* Ambient Background Glows */}
+            <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-indigo-500/10 rounded-full filter blur-3xl pointer-events-none"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-cyan-500/10 rounded-full filter blur-3xl pointer-events-none"></div>
+
+            {/* Login Card */}
+            <div className="w-full max-w-md bg-slate-900/60 backdrop-blur-xl rounded-3xl p-8 sm:p-10 border border-white/10 shadow-2xl shadow-black/80 relative z-10 animate-fade-in">
+                
+                {/* Brand */}
                 <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center relative overflow-hidden">
-                        <i className="fas fa-boxes text-white relative z-10"></i>
-                        <div className="absolute top-[-10px] right-[-10px] w-6 h-6 bg-blue-600 rounded-full"></div>
+                    <div className="w-10 h-10 bg-gradient-to-tr from-indigo-500 to-cyan-500 rounded-xl flex items-center justify-center relative overflow-hidden shadow-lg shadow-indigo-500/25">
+                        <i className="fas fa-boxes text-white relative z-10 text-sm"></i>
+                        <div className="absolute -top-2 -right-2 w-5 h-5 bg-cyan-400 rounded-full opacity-60"></div>
                     </div>
-                    <span className="font-extrabold text-2xl tracking-tight">Stok<span className="text-blue-600">DechaJaya</span></span>
+                    <span className="font-extrabold text-xl tracking-tight text-white">
+                        Stok<span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">DechaJaya</span>
+                    </span>
                 </div>
-                <h1 className="text-3xl font-bold mt-6">Selamat Datang</h1>
-                <p className="text-gray-500 mb-8">Login untuk mengelola stok & keuangan toko</p>
+                
+                <h1 className="text-3xl font-extrabold mt-6 bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">Selamat Datang</h1>
+                <p className="text-slate-400 mb-8 text-sm font-medium">Login untuk mengelola stok & keuangan toko</p>
 
                 {error && (
-                    <div className="bg-red-50 text-red-600 p-3 rounded-xl mb-4 text-sm">
-                        {error}
+                    <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3.5 rounded-xl mb-6 text-sm flex items-center gap-2">
+                        <i className="fas fa-exclamation-circle text-xs"></i>
+                        <span>{error}</span>
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-4">
-                        <label className="block text-xs font-semibold text-gray-600 uppercase mb-1">Username</label>
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Username</label>
                         <input
                             type="text"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium text-sm"
                             placeholder="Masukkan username"
                             required
                         />
                     </div>
-                    <div className="mb-6">
-                        <div className="flex justify-between flex-wrap gap-2 mb-1">
-                            <label className="block text-xs font-semibold text-gray-600 uppercase">Password</label>
-                            <Link to="/reset-password" className="text-xs text-blue-600 hover:underline">Lupa Password?</Link>
+                    <div>
+                        <div className="flex justify-between flex-wrap gap-2 mb-2">
+                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Password</label>
+                            <Link to="/reset-password text-xs" className="text-xs text-indigo-400 hover:text-cyan-400 transition-colors font-medium">Lupa Password?</Link>
                         </div>
                         <input
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium text-sm"
                             placeholder="••••••••"
                             required
                         />
                     </div>
+                    
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-black text-white py-3 rounded-xl font-bold hover:bg-blue-600 transition-all flex items-center justify-center gap-2"
+                        className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-cyan-500 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-indigo-500/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 mt-4"
                     >
                         {loading ? 'Memproses...' : 'Masuk'}
-                        {!loading && <i className="fas fa-arrow-right"></i>}
+                        {!loading && <i className="fas fa-arrow-right text-xs"></i>}
                     </button>
                 </form>
 
                 <div className="text-center mt-6">
-                    <Link to="/register" className="text-blue-600 hover:underline">Daftar sebagai karyawan →</Link>
+                    <Link to="/register" className="text-xs text-indigo-400 hover:text-cyan-400 transition-colors font-semibold">
+                        Daftar sebagai karyawan →
+                    </Link>
                 </div>
             </div>
         </div>

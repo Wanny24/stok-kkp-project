@@ -55,15 +55,15 @@ function FloatingNotification() {
     };
 
     return (
-        <div className="fixed bottom-6 right-6 z-50">
+        <div className="fixed bottom-6 right-6 z-50 animate-fade-in">
             {/* Floating Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="relative w-14 h-14 bg-gray-900 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-600 transition-all hover:scale-105"
+                className="relative w-14 h-14 bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-500 text-white rounded-full shadow-lg shadow-indigo-500/20 hover:shadow-cyan-500/30 flex items-center justify-center hover:scale-105 active:scale-95 border border-white/10 transition-all duration-300"
             >
                 <i className="fas fa-bell text-xl"></i>
                 {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1">
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 shadow-md animate-pulse">
                         {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                 )}
@@ -71,19 +71,24 @@ function FloatingNotification() {
 
             {/* Notification Panel */}
             {isOpen && (
-                <div className="absolute bottom-16 right-0 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                    <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 font-semibold text-gray-800 text-sm flex justify-between items-center">
-                        <span>Notifikasi</span>
+                <div className="absolute bottom-16 right-0 w-80 sm:w-96 bg-[#0c1022]/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden transform origin-bottom-right transition-all duration-300">
+                    <div className="px-4 py-3.5 bg-white/5 border-b border-white/10 font-semibold text-white text-sm flex justify-between items-center">
+                        <span className="flex items-center gap-2">
+                            <i className="fas fa-bell text-xs text-indigo-400"></i>
+                            Notifikasi
+                        </span>
                         {unreadCount > 0 && (
-                            <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">
+                            <span className="text-xs bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-medium">
                                 {unreadCount} baru
                             </span>
                         )}
                     </div>
-                    <div className="max-h-96 overflow-y-auto">
+                    <div className="max-h-[360px] overflow-y-auto">
                         {notifications.length === 0 ? (
-                            <div className="p-6 text-center text-gray-400 text-sm">
-                                <i className="fas fa-bell-slash text-3xl mb-2 block"></i>
+                            <div className="p-8 text-center text-slate-400 text-sm">
+                                <div className="w-12 h-12 bg-white/5 border border-white/5 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <i className="fas fa-bell-slash text-slate-500"></i>
+                                </div>
                                 Tidak ada notifikasi
                             </div>
                         ) : (
@@ -91,20 +96,31 @@ function FloatingNotification() {
                                 <div
                                     key={notif.id}
                                     onClick={() => handleNotificationClick(notif)}
-                                    className={`px-4 py-3 border-b border-gray-50 cursor-pointer transition-colors ${!notif.is_read ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-gray-50'}`}
+                                    className={`px-4 py-3.5 border-b border-white/5 cursor-pointer transition-colors ${
+                                        !notif.is_read 
+                                            ? 'bg-indigo-500/5 hover:bg-indigo-500/10' 
+                                            : 'hover:bg-white/5'
+                                    }`}
                                 >
                                     <div className="flex gap-3">
-                                        <div className={`w-2 h-2 rounded-full mt-1.5 ${!notif.is_read ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
-                                        <div className="flex-1">
-                                            <p className="text-sm font-medium text-gray-800">{notif.title}</p>
-                                            <p className="text-xs text-gray-500 mt-0.5">{notif.message}</p>
-                                            <p className="text-xs text-gray-400 mt-1">
-                                                {new Date(notif.created_at).toLocaleString('id-ID')}
+                                        {/* Status Dot */}
+                                        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                                            !notif.is_read 
+                                                ? 'bg-indigo-400 shadow-sm shadow-indigo-400/50' 
+                                                : 'bg-slate-700'
+                                        }`}></div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-semibold text-slate-200 truncate">{notif.title}</p>
+                                            <p className="text-xs text-slate-400 mt-0.5 break-words line-clamp-2 leading-relaxed">{notif.message}</p>
+                                            <p className="text-[10px] text-slate-500 mt-1.5 flex items-center gap-1">
+                                                <i className="far fa-clock"></i>
+                                                {new Date(notif.created_at).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
                                             </p>
                                         </div>
-                                        {notif.type === 'warning' && <i className="fas fa-exclamation-triangle text-amber-500 text-xs"></i>}
-                                        {notif.type === 'danger' && <i className="fas fa-times-circle text-red-500 text-xs"></i>}
-                                        {notif.type === 'success' && <i className="fas fa-check-circle text-green-500 text-xs"></i>}
+                                        {/* Status Icon */}
+                                        {notif.type === 'warning' && <i className="fas fa-exclamation-triangle text-amber-400 text-xs mt-1"></i>}
+                                        {notif.type === 'danger' && <i className="fas fa-times-circle text-red-400 text-xs mt-1"></i>}
+                                        {notif.type === 'success' && <i className="fas fa-check-circle text-emerald-400 text-xs mt-1"></i>}
                                     </div>
                                 </div>
                             ))

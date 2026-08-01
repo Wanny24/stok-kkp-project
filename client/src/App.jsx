@@ -6,7 +6,6 @@ import ResetPassword from './pages/ResetPassword';
 import OwnerDashboard from './pages/OwnerDashboard';
 import KaryawanDashboard from './pages/KaryawanDashboard';
 import Stok from './pages/Stok';
-import UangMasuk from './pages/UangMasuk';
 import Profit from './pages/Profit';
 import ModalView from './pages/ModalView';
 import ActivityLog from './pages/ActivityLog';
@@ -54,10 +53,7 @@ function App() {
                     </ProtectedRoute>
                 } />
                 <Route path="/owner/uang-masuk" element={
-                    <ProtectedRoute allowedRole="owner">
-                        <UangMasuk />
-                        <FloatingNotification />
-                    </ProtectedRoute>
+                    <Navigate to="/owner/profit" replace />
                 } />
                 <Route path="/owner/profit" element={
                     <ProtectedRoute allowedRole="owner">
