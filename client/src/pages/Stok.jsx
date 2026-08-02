@@ -627,6 +627,12 @@ function Stok() {
                                     onChange={handleInputChange}
                                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 font-medium text-sm transition-all"
                                     max="1000"
+                                    onInvalid={(e) => {
+                                        if (e.target.validity.rangeOverflow) {
+                                            e.target.setCustomValidity('Stok Maksimal 1000 Pcs');
+                                        }
+                                    }}
+                                    onInput={(e) => e.target.setCustomValidity('')}
                                     required
                                 />
                             </div>
@@ -763,6 +769,12 @@ function Stok() {
                                         className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 font-medium text-sm transition-all"
                                         min="1"
                                         max={actionModal.type === 'tambah' ? 1000 - actionModal.item.stock : undefined}
+                                        onInvalid={(e) => {
+                                            if (e.target.validity.rangeOverflow) {
+                                                e.target.setCustomValidity('Stok Maksimal 1000 Pcs');
+                                            }
+                                        }}
+                                        onInput={(e) => e.target.setCustomValidity('')}
                                         required
                                     />
                                     <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
@@ -800,6 +812,12 @@ function Stok() {
                                             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 font-medium text-sm transition-all"
                                             min="1"
                                             max={1000 - actionModal.item.stock}
+                                            onInvalid={(e) => {
+                                                if (e.target.validity.rangeOverflow) {
+                                                    e.target.setCustomValidity('Stok Maksimal 1000 Pcs');
+                                                }
+                                            }}
+                                            onInput={(e) => e.target.setCustomValidity('')}
                                             required
                                         />
                                     </div>
