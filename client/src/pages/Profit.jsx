@@ -54,7 +54,7 @@ function Profit() {
                 operasional: biayaRes.data.current?.operasional || 0,
                 history: biayaRes.data.history || []
             });
-            const total = pemasukanRes.data.reduce((sum, item) => sum + item.jumlah, 0);
+            const total = pemasukanRes.data.reduce((sum, item) => sum + parseFloat(item.jumlah || 0), 0);
             setTotalUangMasuk(total);
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -194,19 +194,11 @@ function Profit() {
 
     const checkIfProfitVisible = () => {
         if (!isOwner) return false;
+        if (!profitSettings.next_update_allowed) return true;
         
         const now = new Date();
-        const lastUpdated = new Date(profitSettings.last_updated);
-        const daysDiff = Math.floor((now - lastUpdated) / (1000 * 60 * 60 * 24));
-        
-        if (profitSettings.duration_type === 'daily') {
-            return daysDiff >= profitSettings.duration_value;
-        } else if (profitSettings.duration_type === 'weekly') {
-            return daysDiff >= 7;
-        } else if (profitSettings.duration_type === 'monthly') {
-            return daysDiff >= 30;
-        }
-        return false;
+        const nextUpdate = new Date(profitSettings.next_update_allowed);
+        return now >= nextUpdate;
     };
 
     const profitKotor = totalUangMasuk - biaya.konsumsi - biaya.operasional;
