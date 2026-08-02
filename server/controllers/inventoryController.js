@@ -22,6 +22,13 @@ const addInventory = async (req, res) => {
     try {
         const { nama, stock, harga_jual, average_cost, min_stock = 5 } = req.body;
         
+        // Batasi maksimal 30 produk
+        const countResult = await db.query('SELECT COUNT(*) as count FROM inventory');
+        const count = countResult[0]?.count || 0;
+        if (count >= 30) {
+            return res.status(400).json({ message: 'Batas maksimal 30 produk telah tercapai' });
+        }
+
         const sensitiveData = JSON.stringify({
             nama,
             created: new Date().toISOString(),

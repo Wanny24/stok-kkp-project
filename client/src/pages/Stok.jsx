@@ -106,6 +106,10 @@ function Stok() {
 
     const handleTambahBarang = async (e) => {
         e.preventDefault();
+        if (inventory.length >= 30) {
+            showToast('Batas maksimal 30 produk telah tercapai', 'error');
+            return;
+        }
         try {
             await API.post('/inventory', {
                 nama: formData.nama,
@@ -319,7 +323,7 @@ function Stok() {
                                 <div className="w-8 h-8 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-400">
                                     <i className="fas fa-warehouse text-xs sm:text-sm"></i>
                                 </div>
-                                Tabel Manajemen Stok
+                                Tabel Manajemen Stok <span className="text-xs text-slate-400 font-medium">({inventory.length}/30 Produk)</span>
                             </h3>
                             <div className="flex flex-col sm:flex-row gap-3">
                                 {/* Search Bar */}
@@ -335,11 +339,21 @@ function Stok() {
                                 </div>
                                 {isOwner && (
                                     <button
-                                        onClick={() => setShowModal(true)}
-                                        className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-cyan-500 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-lg shadow-indigo-500/20 active:scale-[0.99] transition-all flex items-center justify-center gap-2 border border-white/10"
+                                        onClick={() => {
+                                            if (inventory.length >= 30) {
+                                                showToast('Batas maksimal 30 produk telah tercapai', 'error');
+                                            } else {
+                                                setShowModal(true);
+                                            }
+                                        }}
+                                        className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-lg active:scale-[0.99] transition-all flex items-center justify-center gap-2 border border-white/10 ${
+                                            inventory.length >= 30
+                                                ? 'bg-slate-700 text-slate-400 cursor-not-allowed border-slate-600'
+                                                : 'bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-cyan-500 text-white shadow-indigo-500/20'
+                                        }`}
                                     >
                                         <i className="fas fa-plus text-xs"></i>
-                                        Tambah Barang
+                                        Tambah Barang {inventory.length >= 30 && '(Penuh)'}
                                     </button>
                                 )}
                             </div>
