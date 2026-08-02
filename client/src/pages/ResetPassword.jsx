@@ -47,9 +47,9 @@ function ResetPassword() {
             return;
         }
 
-        const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/;
         if (!re.test(password)) {
-            setError('Password minimal 8 karakter, mengandung huruf besar, huruf kecil, angka, dan karakter spesial');
+            setError('Password harus 8-16 karakter, mengandung huruf besar, huruf kecil, angka, dan karakter spesial');
             setLoading(false);
             return;
         }
@@ -151,9 +151,10 @@ function ResetPassword() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium text-sm"
                                 placeholder="••••••••"
+                                maxLength="16"
                                 required
                             />
-                            <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">Minimal 8 karakter (mengandung huruf besar, kecil, angka, & simbol)</p>
+                            <p className="text-[10px] text-slate-400 mt-1.5 leading-relaxed">8-16 karakter (mengandung huruf besar, kecil, angka, & simbol)</p>
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Konfirmasi Password Baru</label>
@@ -163,6 +164,7 @@ function ResetPassword() {
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all font-medium text-sm"
                                 placeholder="••••••••"
+                                maxLength="16"
                                 required
                             />
                         </div>

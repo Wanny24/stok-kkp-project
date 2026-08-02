@@ -4,8 +4,8 @@ const jwt = require('jsonwebtoken');
 const { sendOTPEmail } = require('../utils/mailer');
 
 const validatePassword = (password) => {
-    // 8 karakter, huruf besar & kecil, angka, spesial karakter
-    const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    // 8-16 karakter, huruf besar & kecil, angka, spesial karakter
+    const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/;
     return re.test(password);
 };
 
@@ -247,7 +247,7 @@ const register = async (req, res) => {
         if (!validatePassword(password)) {
             return res.status(400).json({ 
                 success: false, 
-                message: 'Password harus minimal 8 karakter, mengandung huruf besar, huruf kecil, angka, dan karakter spesial' 
+                message: 'Password harus 8-16 karakter, mengandung huruf besar, huruf kecil, angka, dan karakter spesial' 
             });
         }
         
@@ -329,7 +329,7 @@ const resetPassword = async (req, res) => {
         if (!validatePassword(password)) {
             return res.status(400).json({ 
                 success: false, 
-                message: 'Password harus minimal 8 karakter, mengandung huruf besar, huruf kecil, angka, dan karakter spesial' 
+                message: 'Password harus 8-16 karakter, mengandung huruf besar, huruf kecil, angka, dan karakter spesial' 
             });
         }
 
