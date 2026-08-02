@@ -50,8 +50,8 @@ function Profit() {
             
             setPemasukanList(pemasukanRes.data);
             setBiaya({
-                konsumsi: biayaRes.data.current?.konsumsi || 0,
-                operasional: biayaRes.data.current?.operasional || 0,
+                konsumsi: parseFloat(biayaRes.data.current?.konsumsi || 0),
+                operasional: parseFloat(biayaRes.data.current?.operasional || 0),
                 history: biayaRes.data.history || []
             });
             const total = pemasukanRes.data.reduce((sum, item) => sum + parseFloat(item.jumlah || 0), 0);

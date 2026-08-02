@@ -125,6 +125,17 @@ async function autoMigrate() {
         `);
         console.log('✓ Table biaya ready');
 
+        // Seed default biaya if empty
+        try {
+            const [biayaRows] = await connection.execute('SELECT COUNT(*) as count FROM biaya');
+            if (biayaRows[0]?.count === 0) {
+                await connection.execute("INSERT INTO biaya (jenis, jumlah) VALUES ('konsumsi', 0.00), ('operasional', 0.00)");
+                console.log('✓ Seeded default biaya rows');
+            }
+        } catch (e) {
+            console.error('Error seeding biaya:', e);
+        }
+
         // 6. Tabel biaya_history
         await connection.execute(`
             CREATE TABLE IF NOT EXISTS biaya_history (
