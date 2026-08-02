@@ -40,6 +40,13 @@ async function getPool() {
             
             console.log('✅ Database connected successfully');
         } catch (error) {
+            if (pool) {
+                try {
+                    await pool.end();
+                } catch (closeError) {
+                    console.error('Error closing pool after connection failure:', closeError.message);
+                }
+            }
             pool = null; // Reset pool agar bisa reconnect pada request berikutnya
             console.error('❌ Database connection failed:', error.message);
             throw error;

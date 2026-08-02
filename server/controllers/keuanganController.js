@@ -216,9 +216,16 @@ const getActivityLogs = async (req, res) => {
         const logs = await db.query('SELECT * FROM activity_logs ORDER BY timestamp DESC LIMIT 200');
         
         const decryptedLogs = logs.map(log => {
+            // Fast path: if plain text action is already stored, use it directly to bypass expensive decryption
+            if (log.action && log.action.trim() !== '') {
+                return { ...log, decrypted: true };
+            }
             try {
-                const decryptedAction = twofish.decrypt(log.encrypted_action);
-                return { ...log, action: decryptedAction, decrypted: true };
+                if (log.encrypted_action) {
+                    const decryptedAction = twofish.decrypt(log.encrypted_action);
+                    return { ...log, action: decryptedAction, decrypted: true };
+                }
+                return { ...log, decrypted: false };
             } catch (error) {
                 return { ...log, action: log.action, decrypted: false };
             }
