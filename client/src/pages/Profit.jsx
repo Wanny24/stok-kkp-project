@@ -45,10 +45,9 @@ function Profit() {
 
     const fetchData = async () => {
         try {
-            const [pemasukanRes, biayaRes] = await Promise.all([
-                API.get('/keuangan/pemasukan'),
-                API.get('/keuangan/biaya')
-            ]);
+            const pemasukanRes = await API.get('/keuangan/pemasukan');
+            const biayaRes = await API.get('/keuangan/biaya');
+            
             setPemasukanList(pemasukanRes.data);
             setBiaya({
                 konsumsi: biayaRes.data.current?.konsumsi || 0,

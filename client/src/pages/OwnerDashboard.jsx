@@ -40,13 +40,11 @@ function OwnerDashboard() {
     const fetchDashboardData = async () => {
         try {
             setLoadingCharts(true);
-            const [invRes, logsRes, pemasukanRes, biayaRes, settingsRes] = await Promise.all([
-                API.get('/inventory'),
-                API.get('/keuangan/logs'),
-                API.get('/keuangan/pemasukan'),
-                API.get('/keuangan/biaya'),
-                API.get('/keuangan/profit-settings')
-            ]);
+            const invRes = await API.get('/inventory');
+            const logsRes = await API.get('/keuangan/logs');
+            const pemasukanRes = await API.get('/keuangan/pemasukan');
+            const biayaRes = await API.get('/keuangan/biaya');
+            const settingsRes = await API.get('/keuangan/profit-settings');
 
             const inventory = invRes.data;
             setStats({
