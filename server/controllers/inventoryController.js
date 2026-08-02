@@ -22,6 +22,10 @@ const addInventory = async (req, res) => {
     try {
         const { nama, stock, harga_jual, average_cost, min_stock = 5 } = req.body;
         
+        if (parseInt(stock) > 1000) {
+            return res.status(400).json({ message: 'Stok Maksimal 1000 Pcs' });
+        }
+        
         // Batasi maksimal 30 produk
         const countResult = await db.query('SELECT COUNT(*) as count FROM inventory');
         const count = countResult[0]?.count || 0;
@@ -83,6 +87,9 @@ const updateStock = async (req, res) => {
         
         let newStock = item[0].stock;
         if (type === 'tambah') {
+            if (newStock + quantity > 1000) {
+                return res.status(400).json({ message: 'Stok Maksimal 1000 Pcs' });
+            }
             newStock += quantity;
         } else if (type === 'kurang') {
             if (newStock < quantity) {
@@ -133,6 +140,11 @@ const updateAverageCost = async (req, res) => {
         const totalCostBefore = oldStock * oldAvg;
         const newTotalCost = newQuantity * newUnitCost;
         const newStock = oldStock + newQuantity;
+        
+        if (newStock > 1000) {
+            return res.status(400).json({ message: 'Stok Maksimal 1000 Pcs' });
+        }
+        
         const newAvg = Math.round((totalCostBefore + newTotalCost) / newStock);
         
         await db.query(

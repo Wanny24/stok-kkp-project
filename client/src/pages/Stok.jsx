@@ -110,6 +110,10 @@ function Stok() {
             showToast('Batas maksimal 30 produk telah tercapai', 'error');
             return;
         }
+        if (parseInt(formData.stock) > 1000) {
+            showToast('Stok Maksimal 1000 Pcs', 'error');
+            return;
+        }
         try {
             await API.post('/inventory', {
                 nama: formData.nama,
@@ -161,6 +165,10 @@ function Stok() {
             if (type === 'tambah') {
                 const quantity = parseInt(actionData.value1);
                 if (quantity > 0) {
+                    if (item.stock + quantity > 1000) {
+                        showToast('Stok Maksimal 1000 Pcs', 'error');
+                        return;
+                    }
                     await API.put('/inventory/stock', { id, type: 'tambah', quantity });
                     showToast('Stok berhasil ditambahkan', 'success');
                 }
@@ -178,6 +186,10 @@ function Stok() {
                 const newQuantity = parseInt(actionData.value1);
                 const newUnitCost = parseFloat(actionData.value2);
                 if (newQuantity > 0 && newUnitCost > 0) {
+                    if (item.stock + newQuantity > 1000) {
+                        showToast('Stok Maksimal 1000 Pcs', 'error');
+                        return;
+                    }
                     await API.put('/inventory/average-cost', { id, newQuantity, newUnitCost });
                     showToast('Modal berhasil diupdate', 'success');
                 }
@@ -614,6 +626,7 @@ function Stok() {
                                     value={formData.stock}
                                     onChange={handleInputChange}
                                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 font-medium text-sm transition-all"
+                                    max="1000"
                                     required
                                 />
                             </div>
@@ -749,6 +762,7 @@ function Stok() {
                                         onChange={(e) => setActionData({ ...actionData, value1: e.target.value })}
                                         className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 font-medium text-sm transition-all"
                                         min="1"
+                                        max={actionModal.type === 'tambah' ? 1000 - actionModal.item.stock : undefined}
                                         required
                                     />
                                     <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
@@ -785,6 +799,7 @@ function Stok() {
                                             onChange={(e) => setActionData({ ...actionData, value1: e.target.value })}
                                             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 font-medium text-sm transition-all"
                                             min="1"
+                                            max={1000 - actionModal.item.stock}
                                             required
                                         />
                                     </div>
