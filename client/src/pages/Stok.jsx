@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import API from '../utils/api';
 import { formatRupiah } from '../utils/formatRupiah';
+import { formatNumberWithDots, cleanNumberString } from '../utils/formatNumber';
+
 
 function Stok() {
     const [inventory, setInventory] = useState([]);
@@ -13,7 +15,7 @@ function Stok() {
     const [showModal, setShowModal] = useState(false);
     const [showMinStockModal, setShowMinStockModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
-    const [newMinStock, setNewMinStock] = useState(5);
+    const [newMinStock, setNewMinStock] = useState('5');
     const [actionModal, setActionModal] = useState({
         show: false,
         type: '', // 'tambah', 'kurang', 'modal', 'harga'
@@ -28,7 +30,7 @@ function Stok() {
         harga_jual: '',
         stock: '',
         average_cost: '',
-        min_stock: 5
+        min_stock: '5'
     });
 
     // Custom Toast & Confirm states
@@ -98,10 +100,18 @@ function Stok() {
     };
 
     const handleInputChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
+        const { name, value } = e.target;
+        if (name === 'stock' || name === 'harga_jual' || name === 'average_cost' || name === 'min_stock') {
+            setFormData({
+                ...formData,
+                [name]: formatNumberWithDots(value)
+            });
+        } else {
+            setFormData({
+                ...formData,
+                [name]: value
+            });
+        }
     };
 
     const handleTambahBarang = async (e) => {
@@ -110,21 +120,22 @@ function Stok() {
             showToast('Batas maksimal 30 produk telah tercapai', 'error');
             return;
         }
-        if (parseInt(formData.stock) > 1000) {
+        const rawStock = parseInt(cleanNumberString(formData.stock));
+        if (rawStock > 1000) {
             showToast('Stok Maksimal 1000 Pcs', 'error');
             return;
         }
         try {
             await API.post('/inventory', {
                 nama: formData.nama,
-                stock: parseInt(formData.stock),
-                harga_jual: parseFloat(formData.harga_jual),
-                average_cost: parseFloat(formData.average_cost),
-                min_stock: parseInt(formData.min_stock)
+                stock: rawStock,
+                harga_jual: parseFloat(cleanNumberString(formData.harga_jual)),
+                average_cost: parseFloat(cleanNumberString(formData.average_cost)),
+                min_stock: parseInt(cleanNumberString(formData.min_stock))
             });
             fetchInventory();
             setShowModal(false);
-            setFormData({ nama: '', harga_jual: '', stock: '', average_cost: '', min_stock: 5 });
+            setFormData({ nama: '', harga_jual: '', stock: '', average_cost: '', min_stock: '5' });
             showToast('Produk berhasil ditambahkan', 'success');
         } catch (error) {
             showToast(error.response?.data?.message || 'Gagal menambah produk', 'error');
@@ -135,7 +146,7 @@ function Stok() {
         try {
             await API.put('/inventory/min-stock', {
                 id: selectedProduct.id,
-                min_stock: newMinStock
+                min_stock: parseInt(cleanNumberString(newMinStock))
             });
             fetchInventory();
             setShowMinStockModal(false);
@@ -150,9 +161,9 @@ function Stok() {
         if (type === 'tambah' || type === 'kurang') {
             setActionData({ value1: '1', value2: '' });
         } else if (type === 'harga') {
-            setActionData({ value1: Math.round(item.harga_jual).toString(), value2: '' });
+            setActionData({ value1: formatNumberWithDots(Math.round(item.harga_jual)), value2: '' });
         } else if (type === 'modal') {
-            setActionData({ value1: '5', value2: Math.round(item.average_cost).toString() });
+            setActionData({ value1: '5', value2: formatNumberWithDots(Math.round(item.average_cost)) });
         }
     };
 
@@ -163,7 +174,7 @@ function Stok() {
         
         try {
             if (type === 'tambah') {
-                const quantity = parseInt(actionData.value1);
+                const quantity = parseInt(cleanNumberString(actionData.value1));
                 if (quantity > 0) {
                     if (item.stock + quantity > 1000) {
                         showToast('Stok Maksimal 1000 Pcs', 'error');
@@ -173,7 +184,7 @@ function Stok() {
                     showToast('Stok berhasil ditambahkan', 'success');
                 }
             } else if (type === 'kurang') {
-                const quantity = parseInt(actionData.value1);
+                const quantity = parseInt(cleanNumberString(actionData.value1));
                 if (quantity > 0) {
                     if (item.stock < quantity) {
                         showToast('Stok tidak cukup', 'error');
@@ -183,8 +194,8 @@ function Stok() {
                     showToast('Stok berhasil dikurangi', 'success');
                 }
             } else if (type === 'modal') {
-                const newQuantity = parseInt(actionData.value1);
-                const newUnitCost = parseFloat(actionData.value2);
+                const newQuantity = parseInt(cleanNumberString(actionData.value1));
+                const newUnitCost = parseFloat(cleanNumberString(actionData.value2));
                 if (newQuantity > 0 && newUnitCost > 0) {
                     if (item.stock + newQuantity > 1000) {
                         showToast('Stok Maksimal 1000 Pcs', 'error');
@@ -194,7 +205,7 @@ function Stok() {
                     showToast('Modal berhasil diupdate', 'success');
                 }
             } else if (type === 'harga') {
-                const newPrice = parseFloat(actionData.value1);
+                const newPrice = parseFloat(cleanNumberString(actionData.value1));
                 if (newPrice > 0) {
                     await API.put('/inventory/harga-jual', { id, harga_jual: newPrice });
                     showToast('Harga jual berhasil diupdate', 'success');
@@ -231,7 +242,7 @@ function Stok() {
 
     const openMinStockModal = (item) => {
         setSelectedProduct(item);
-        setNewMinStock(item.min_stock || 5);
+        setNewMinStock(formatNumberWithDots(item.min_stock || 5));
         setShowMinStockModal(true);
     };
 
@@ -422,14 +433,14 @@ function Stok() {
                                                         {isLowStock ? (
                                                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded-lg text-xs font-semibold">
                                                                 <i className="fas fa-exclamation-triangle text-[10px]"></i>
-                                                                {item.stock} / {minStock}
+                                                                {formatNumberWithDots(item.stock)} / {formatNumberWithDots(minStock)}
                                                             </span>
                                                         ) : (
-                                                            <span className="font-bold text-slate-200 text-sm">{item.stock}</span>
+                                                            <span className="font-bold text-slate-200 text-sm">{formatNumberWithDots(item.stock)}</span>
                                                         )}
                                                     </td>
                                                     <td className="px-5 py-3.5">
-                                                        <span className="text-slate-400 text-sm font-medium">{minStock}</span>
+                                                        <span className="text-slate-400 text-sm font-medium">{formatNumberWithDots(minStock)}</span>
                                                     </td>
                                                     <td className="px-5 py-3.5">
                                                         <span className="font-bold text-slate-200 text-sm">{formatRupiah(item.harga_jual)}</span>
@@ -540,7 +551,7 @@ function Stok() {
                                                 <div>
                                                     <span className="text-slate-400">Stok</span>
                                                     <p className={`font-bold mt-0.5 ${isLowStock ? 'text-amber-400' : 'text-slate-200'}`}>
-                                                        {item.stock} / {minStock}
+                                                        {formatNumberWithDots(item.stock)} / {formatNumberWithDots(minStock)}
                                                     </p>
                                                 </div>
                                                 <div>
@@ -621,25 +632,18 @@ function Stok() {
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Stok Awal *</label>
                                 <input
-                                    type="number"
+                                    type="text"
                                     name="stock"
                                     value={formData.stock}
                                     onChange={handleInputChange}
                                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 font-medium text-sm transition-all"
-                                    max="1000"
-                                    onInvalid={(e) => {
-                                        if (e.target.validity.rangeOverflow) {
-                                            e.target.setCustomValidity('Stok Maksimal 1000 Pcs');
-                                        }
-                                    }}
-                                    onInput={(e) => e.target.setCustomValidity('')}
                                     required
                                 />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Batas Minimum Stok</label>
                                 <input
-                                    type="number"
+                                    type="text"
                                     name="min_stock"
                                     value={formData.min_stock}
                                     onChange={handleInputChange}
@@ -650,7 +654,7 @@ function Stok() {
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Harga Jual (Rp) *</label>
                                 <input
-                                    type="number"
+                                    type="text"
                                     name="harga_jual"
                                     value={formData.harga_jual}
                                     onChange={handleInputChange}
@@ -661,7 +665,7 @@ function Stok() {
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Modal Awal (Rp) *</label>
                                 <input
-                                    type="number"
+                                    type="text"
                                     name="average_cost"
                                     value={formData.average_cost}
                                     onChange={handleInputChange}
@@ -707,11 +711,10 @@ function Stok() {
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Batas Minimum Stok Baru</label>
                                 <input
-                                    type="number"
+                                    type="text"
                                     value={newMinStock}
-                                    onChange={(e) => setNewMinStock(parseInt(e.target.value))}
+                                    onChange={(e) => setNewMinStock(formatNumberWithDots(e.target.value))}
                                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 font-medium text-sm transition-all"
-                                    min="1"
                                 />
                                 <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
                                     Notifikasi akan muncul jika stok mencapai atau kurang dari {newMinStock} unit.
@@ -763,18 +766,10 @@ function Stok() {
                                         Jumlah Stok {actionModal.type === 'tambah' ? 'Tambahan' : 'Dikurangi'}
                                     </label>
                                     <input
-                                        type="number"
+                                        type="text"
                                         value={actionData.value1}
-                                        onChange={(e) => setActionData({ ...actionData, value1: e.target.value })}
+                                        onChange={(e) => setActionData({ ...actionData, value1: formatNumberWithDots(e.target.value) })}
                                         className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 font-medium text-sm transition-all"
-                                        min="1"
-                                        max={actionModal.type === 'tambah' ? 1000 - actionModal.item.stock : undefined}
-                                        onInvalid={(e) => {
-                                            if (e.target.validity.rangeOverflow) {
-                                                e.target.setCustomValidity('Stok Maksimal 1000 Pcs');
-                                            }
-                                        }}
-                                        onInput={(e) => e.target.setCustomValidity('')}
                                         required
                                     />
                                     <p className="text-[10px] text-slate-400 mt-2 leading-relaxed">
@@ -789,11 +784,10 @@ function Stok() {
                                         Harga Jual Baru (Rp)
                                     </label>
                                     <input
-                                        type="number"
+                                        type="text"
                                         value={actionData.value1}
-                                        onChange={(e) => setActionData({ ...actionData, value1: e.target.value })}
+                                        onChange={(e) => setActionData({ ...actionData, value1: formatNumberWithDots(e.target.value) })}
                                         className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 font-medium text-sm transition-all"
-                                        min="1"
                                         required
                                     />
                                 </div>
@@ -806,18 +800,10 @@ function Stok() {
                                             Jumlah Pembelian Baru (unit)
                                         </label>
                                         <input
-                                            type="number"
+                                            type="text"
                                             value={actionData.value1}
-                                            onChange={(e) => setActionData({ ...actionData, value1: e.target.value })}
+                                            onChange={(e) => setActionData({ ...actionData, value1: formatNumberWithDots(e.target.value) })}
                                             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 font-medium text-sm transition-all"
-                                            min="1"
-                                            max={1000 - actionModal.item.stock}
-                                            onInvalid={(e) => {
-                                                if (e.target.validity.rangeOverflow) {
-                                                    e.target.setCustomValidity('Stok Maksimal 1000 Pcs');
-                                                }
-                                            }}
-                                            onInput={(e) => e.target.setCustomValidity('')}
                                             required
                                         />
                                     </div>
@@ -826,11 +812,10 @@ function Stok() {
                                             Harga Beli Per Unit Baru (Rp)
                                         </label>
                                         <input
-                                            type="number"
+                                            type="text"
                                             value={actionData.value2}
-                                            onChange={(e) => setActionData({ ...actionData, value2: e.target.value })}
+                                            onChange={(e) => setActionData({ ...actionData, value2: formatNumberWithDots(e.target.value) })}
                                             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 font-medium text-sm transition-all"
-                                            min="1"
                                             required
                                         />
                                     </div>

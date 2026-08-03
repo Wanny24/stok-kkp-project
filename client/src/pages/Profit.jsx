@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import API from '../utils/api';
 import { formatRupiah } from '../utils/formatRupiah';
+import { formatNumberWithDots, cleanNumberString } from '../utils/formatNumber';
+
 
 function Profit() {
     const [pemasukanList, setPemasukanList] = useState([]);
@@ -153,13 +155,14 @@ function Profit() {
 
     // Integrated Uang Masuk Handlers
     const handleTambahPemasukan = async () => {
-        if (!incomeNominal || parseFloat(incomeNominal) <= 0) {
+        const rawNominal = parseFloat(cleanNumberString(incomeNominal));
+        if (!incomeNominal || rawNominal <= 0) {
             showToast('Nominal tidak valid', 'error');
             return;
         }
         try {
             await API.post('/keuangan/pemasukan', {
-                jumlah: parseFloat(incomeNominal),
+                jumlah: rawNominal,
                 tanggal: incomeDate,
                 keterangan: 'Pemasukan tunai'
             });
@@ -207,7 +210,7 @@ function Profit() {
     const openModal = (type, currentValue = 0, label = '') => {
         setModalType(type);
         setModalData({ 
-            value: currentValue, 
+            value: formatNumberWithDots(Math.round(currentValue)), 
             label, 
             keterangan: biaya[`${type}_keterangan`] || '', 
             tanggal: biaya[`${type}_tanggal`] || new Date().toISOString().split('T')[0] 
@@ -216,7 +219,7 @@ function Profit() {
     };
 
     const handleModalSave = () => {
-        const newValue = parseFloat(modalData.value);
+        const newValue = parseFloat(cleanNumberString(modalData.value));
         if (isNaN(newValue)) return;
         
         setBiaya(prev => ({
@@ -591,10 +594,10 @@ function Profit() {
                                 <div className="flex-1">
                                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Nominal Pemasukan (Rp)</label>
                                     <input
-                                        type="number"
+                                        type="text"
                                         placeholder="Masukkan nominal pemasukan"
                                         value={incomeNominal}
-                                        onChange={(e) => setIncomeNominal(e.target.value)}
+                                        onChange={(e) => setIncomeNominal(formatNumberWithDots(e.target.value))}
                                         className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-sm font-medium transition-all"
                                     />
                                 </div>
@@ -776,9 +779,9 @@ function Profit() {
                             <div>
                                 <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Jumlah Biaya (Rp)</label>
                                 <input
-                                    type="number"
+                                    type="text"
                                     value={modalData.value}
-                                    onChange={(e) => setModalData({ ...modalData, value: e.target.value })}
+                                    onChange={(e) => setModalData({ ...modalData, value: formatNumberWithDots(e.target.value) })}
                                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 font-medium text-sm transition-all"
                                     placeholder="Masukkan nominal biaya"
                                 />
