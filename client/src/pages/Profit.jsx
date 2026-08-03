@@ -508,18 +508,41 @@ function Profit() {
                                 <div className="p-6 space-y-4">
                                     <div className="flex justify-between items-center py-2.5 border-b border-white/5">
                                         <span className="text-slate-400 text-sm font-medium">Total Uang Masuk</span>
-                                        <strong className="text-emerald-400 text-base font-extrabold">{formatRupiah(totalUangMasuk)}</strong>
+                                        <strong className="text-emerald-400 text-base font-extrabold flex items-center gap-1.5">
+                                            {isProfitVisible ? (
+                                                formatRupiah(totalUangMasuk)
+                                            ) : (
+                                                <>
+                                                    <i className="fas fa-lock text-slate-500 text-xs"></i>
+                                                    Terkunci
+                                                </>
+                                            )}
+                                        </strong>
                                     </div>
                                     <div className="flex justify-between items-center py-2.5 border-b border-white/5">
                                         <span className="text-slate-400 text-sm font-medium">Biaya Konsumsi</span>
-                                        <span className="text-red-400 font-semibold text-sm">
-                                            - {formatRupiah(biaya.konsumsi)}
+                                        <span className="text-red-400 font-semibold text-sm flex items-center gap-1.5">
+                                            {isProfitVisible ? (
+                                                `- ${formatRupiah(biaya.konsumsi)}`
+                                            ) : (
+                                                <>
+                                                    <i className="fas fa-lock text-slate-500 text-xs"></i>
+                                                    - Terkunci
+                                                </>
+                                            )}
                                         </span>
                                     </div>
                                     <div className="flex justify-between items-center py-2.5 border-b border-white/5">
                                         <span className="text-slate-400 text-sm font-medium">Biaya Operasional</span>
-                                        <span className="text-red-400 font-semibold text-sm">
-                                            - {formatRupiah(biaya.operasional)}
+                                        <span className="text-red-400 font-semibold text-sm flex items-center gap-1.5">
+                                            {isProfitVisible ? (
+                                                `- ${formatRupiah(biaya.operasional)}`
+                                            ) : (
+                                                <>
+                                                    <i className="fas fa-lock text-slate-500 text-xs"></i>
+                                                    - Terkunci
+                                                </>
+                                            )}
                                         </span>
                                     </div>
                                 </div>
@@ -625,7 +648,17 @@ function Profit() {
                             </h4>
                             
                             <div className="space-y-3.5 max-h-[380px] overflow-y-auto pr-1">
-                                {pemasukanList.length === 0 ? (
+                                {!isProfitVisible ? (
+                                    <div className="p-8 bg-slate-950/60 border border-white/5 rounded-2xl text-center flex flex-col items-center justify-center">
+                                        <div className="w-10 h-10 bg-amber-500/10 border border-amber-500/20 rounded-full flex items-center justify-center text-amber-400 mb-2">
+                                            <i className="fas fa-lock text-sm"></i>
+                                        </div>
+                                        <p className="text-amber-200 text-sm font-bold">Riwayat Transaksi Terkunci</p>
+                                        <p className="text-slate-400 text-xs mt-1">
+                                            Rincian transaksi hanya dapat dilihat setelah laporan profit terbuka.
+                                        </p>
+                                    </div>
+                                ) : pemasukanList.length === 0 ? (
                                     <div className="text-center py-12 text-slate-500">
                                         <div className="w-12 h-12 bg-white/5 border border-white/5 rounded-full flex items-center justify-center mx-auto mb-3">
                                             <i className="fas fa-receipt text-slate-600"></i>
@@ -697,7 +730,10 @@ function Profit() {
                                             className="w-full text-left px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-white/10 transition-all font-bold text-sm flex items-center justify-between"
                                             disabled={!isOwner}
                                         >
-                                            <span>{formatRupiah(biaya.konsumsi)}</span>
+                                            <span className="flex items-center gap-1.5">
+                                                {!isProfitVisible && <i className="fas fa-lock text-slate-500 text-xs"></i>}
+                                                {isProfitVisible ? formatRupiah(biaya.konsumsi) : 'Terkunci'}
+                                            </span>
                                             {isOwner && <i className="fas fa-pen text-[10px] text-indigo-400"></i>}
                                         </button>
                                     </div>
@@ -708,7 +744,10 @@ function Profit() {
                                             className="w-full text-left px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-white/10 transition-all font-bold text-sm flex items-center justify-between"
                                             disabled={!isOwner}
                                         >
-                                            <span>{formatRupiah(biaya.operasional)}</span>
+                                            <span className="flex items-center gap-1.5">
+                                                {!isProfitVisible && <i className="fas fa-lock text-slate-500 text-xs"></i>}
+                                                {isProfitVisible ? formatRupiah(biaya.operasional) : 'Terkunci'}
+                                            </span>
                                             {isOwner && <i className="fas fa-pen text-[10px] text-indigo-400"></i>}
                                         </button>
                                     </div>
@@ -725,29 +764,45 @@ function Profit() {
                                 </div>
 
                                 {/* History Biaya */}
-                                {showHistory && biaya.history.length > 0 && (
+                                {showHistory && (
                                     <div className="mt-6 pt-5 border-t border-white/10 animate-fade-in">
                                         <h4 className="font-bold text-white text-xs uppercase tracking-wider mb-3 flex items-center gap-2">
                                             <i className="fas fa-list text-indigo-400 text-xs"></i>
                                             Riwayat Perubahan Biaya
                                         </h4>
-                                        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                                            {biaya.history.map((item, idx) => (
-                                                <div key={idx} className="flex justify-between items-center text-xs p-3 bg-white/2 rounded-xl border border-white/5 hover:bg-white/5 transition-all">
-                                                    <div className="flex-1">
-                                                        <div className="font-semibold text-slate-200">
-                                                            {item.jenis === 'konsumsi' ? 'Konsumsi' : 'Operasional'}
-                                                            <span className="text-emerald-400 ml-2 font-bold">{formatRupiah(item.jumlah)}</span>
-                                                        </div>
-                                                        {item.keterangan && <div className="text-slate-400 italic mt-1 bg-white/2 px-2.5 py-1 rounded-md inline-block">{item.keterangan}</div>}
-                                                    </div>
-                                                    <div className="text-slate-400 text-right ml-4 font-medium">
-                                                        <div className="text-slate-300 font-semibold">{item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : new Date(item.changed_at).toLocaleDateString('id-ID')}</div>
-                                                        <div className="mt-1 text-[10px] text-slate-500">Oleh: {item.changed_by}</div>
-                                                    </div>
+                                        {!isProfitVisible ? (
+                                            <div className="p-8 bg-slate-950/60 border border-white/5 rounded-2xl text-center flex flex-col items-center justify-center">
+                                                <div className="w-10 h-10 bg-amber-500/10 border border-amber-500/20 rounded-full flex items-center justify-center text-amber-400 mb-2">
+                                                    <i className="fas fa-lock text-sm"></i>
                                                 </div>
-                                            ))}
-                                        </div>
+                                                <p className="text-amber-200 text-sm font-bold">Riwayat Transaksi Terkunci</p>
+                                                <p className="text-slate-400 text-xs mt-1">
+                                                    Rincian transaksi hanya dapat dilihat setelah laporan profit terbuka.
+                                                </p>
+                                            </div>
+                                        ) : biaya.history.length === 0 ? (
+                                            <div className="text-center py-6 text-slate-500">
+                                                <p className="text-xs">Belum ada riwayat pengeluaran</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                                                {biaya.history.map((item, idx) => (
+                                                    <div key={idx} className="flex justify-between items-center text-xs p-3 bg-white/2 rounded-xl border border-white/5 hover:bg-white/5 transition-all">
+                                                        <div className="flex-1">
+                                                            <div className="font-semibold text-slate-200">
+                                                                {item.jenis === 'konsumsi' ? 'Konsumsi' : 'Operasional'}
+                                                                <span className="text-emerald-400 ml-2 font-bold">{formatRupiah(item.jumlah)}</span>
+                                                            </div>
+                                                            {item.keterangan && <div className="text-slate-400 italic mt-1 bg-white/2 px-2.5 py-1 rounded-md inline-block">{item.keterangan}</div>}
+                                                        </div>
+                                                        <div className="text-slate-400 text-right ml-4 font-medium">
+                                                            <div className="text-slate-300 font-semibold">{item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : new Date(item.changed_at).toLocaleDateString('id-ID')}</div>
+                                                            <div className="mt-1 text-[10px] text-slate-500">Oleh: {item.changed_by}</div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
