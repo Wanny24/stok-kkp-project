@@ -33,7 +33,7 @@ function Sidebar({ role, activeMenu }) {
     };
 
     const ownerMenus = [
-        { id: 'dashboard', label: 'Dasbor', path: '/owner', icon: 'fas fa-th-large' },
+        { id: 'dashboard', label: 'Dashboard', path: '/owner', icon: 'fas fa-th-large' },
         { id: 'stok', label: 'Stok Barang', path: '/owner/stok', icon: 'fas fa-cubes' },
         { id: 'profit', label: 'Profit & Keuangan', path: '/owner/profit', icon: 'fas fa-wallet' },
         { id: 'modal', label: 'Modal Investasi', path: '/owner/modal', icon: 'fas fa-hand-holding-usd' },
@@ -42,7 +42,7 @@ function Sidebar({ role, activeMenu }) {
     ];
 
     const karyawanMenus = [
-        { id: 'dashboard', label: 'Dasbor', path: '/karyawan', icon: 'fas fa-th-large' },
+        { id: 'dashboard', label: 'Dashboard', path: '/karyawan', icon: 'fas fa-th-large' },
         { id: 'stok', label: 'Stok Barang', path: '/karyawan/stok', icon: 'fas fa-cubes' },
     ];
 
