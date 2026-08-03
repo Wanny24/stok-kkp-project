@@ -150,9 +150,9 @@ function Stok() {
         if (type === 'tambah' || type === 'kurang') {
             setActionData({ value1: '1', value2: '' });
         } else if (type === 'harga') {
-            setActionData({ value1: item.harga_jual.toString(), value2: '' });
+            setActionData({ value1: Math.round(item.harga_jual).toString(), value2: '' });
         } else if (type === 'modal') {
-            setActionData({ value1: '5', value2: item.average_cost.toString() });
+            setActionData({ value1: '5', value2: Math.round(item.average_cost).toString() });
         }
     };
 
