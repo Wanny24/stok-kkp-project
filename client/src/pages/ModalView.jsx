@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import API from '../utils/api';
 import { formatRupiah } from '../utils/formatRupiah';
+import { formatNumberWithDots } from '../utils/formatNumber';
+
 
 function ModalView() {
     const [inventory, setInventory] = useState([]);
@@ -86,7 +88,7 @@ function ModalView() {
                                                         </div>
                                                     </td>
                                                     <td className="px-5 py-3.5 text-slate-300 font-medium">{formatRupiah(item.average_cost)}</td>
-                                                    <td className="px-5 py-3.5 text-slate-400 font-bold">{item.stock}</td>
+                                                    <td className="px-5 py-3.5 text-slate-400 font-bold">{formatNumberWithDots(item.stock)}</td>
                                                     <td className="px-5 py-3.5">
                                                         <span className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm">
                                                             {formatRupiah(total)}

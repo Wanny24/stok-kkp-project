@@ -34,7 +34,7 @@ const addPemasukan = async (req, res) => {
             [jumlah, tanggal, keterangan || 'Pemasukan tunai', encryptedData]
         );
         
-        await addActivityLog(req.user.username, `Menambah pemasukan Rp ${jumlah.toLocaleString()}`);
+        await addActivityLog(req.user.username, `Menambah pemasukan Rp ${jumlah.toLocaleString('id-ID')}`);
         
         res.json({ id: result.insertId, message: 'Pemasukan berhasil ditambahkan' });
     } catch (error) {
@@ -97,7 +97,7 @@ const updateBiaya = async (req, res) => {
         
         await addActivityLog(
             req.user.username,
-            `Update biaya: Konsumsi Rp ${konsumsi.toLocaleString()}, Operasional Rp ${operasional.toLocaleString()}`
+            `Update biaya: Konsumsi Rp ${konsumsi.toLocaleString('id-ID')}, Operasional Rp ${operasional.toLocaleString('id-ID')}`
         );
         
         res.json({ message: 'Biaya berhasil diupdate' });

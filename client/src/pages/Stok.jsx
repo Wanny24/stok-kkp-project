@@ -329,7 +329,7 @@ function Stok() {
                                                 ></div>
                                             </div>
                                             <span className="text-cyan-400 font-extrabold text-xs sm:text-sm w-20 text-right flex-shrink-0">
-                                                {prod.monthlySales} Unit/bln
+                                                {formatNumberWithDots(prod.monthlySales)} Unit/bln
                                             </span>
                                         </div>
                                     );

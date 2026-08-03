@@ -155,7 +155,7 @@ const updateAverageCost = async (req, res) => {
         const { addActivityLog } = require('./keuanganController');
         await addActivityLog(
             req.user.username,
-            `Update modal ${item[0].nama}: beli ${newQuantity} pcs @Rp ${newUnitCost.toLocaleString()} -> rata-rata baru Rp ${newAvg.toLocaleString()}`
+            `Update modal ${item[0].nama}: beli ${newQuantity} pcs @Rp ${newUnitCost.toLocaleString('id-ID')} -> rata-rata baru Rp ${newAvg.toLocaleString('id-ID')}`
         );
         
         res.json({ message: 'Modal berhasil diupdate', newAverage: newAvg });
@@ -179,7 +179,7 @@ const updateHargaJual = async (req, res) => {
         const { addActivityLog } = require('./keuanganController');
         await addActivityLog(
             req.user.username,
-            `Ubah harga jual ${item[0].nama} -> Rp ${harga_jual.toLocaleString()}`
+            `Ubah harga jual ${item[0].nama} -> Rp ${harga_jual.toLocaleString('id-ID')}`
         );
         
         res.json({ message: 'Harga jual berhasil diupdate' });
