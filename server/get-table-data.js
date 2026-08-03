@@ -2,6 +2,23 @@ const db = require('./config/db');
 const ChaCha20Crypto = require('./crypto/chacha20');
 const chacha20 = new ChaCha20Crypto(process.env.CHACHA20_KEY || 'default-chacha20-key-for-testing-32byte!');
 
+const konsumsiDesc = [
+    'Konsumsi harian',
+    'Konsumsi karyawan',
+    'Beli kopi dan teh',
+    'Makan siang karyawan',
+    'Konsumsi rapat kecil'
+];
+
+const operasionalDesc = [
+    'Biaya listrik',
+    'Pembelian gas LPG',
+    'Biaya air bersih',
+    'Beli kantong plastik',
+    'Beli ATK toko',
+    'Biaya kebersihan dan keamanan'
+];
+
 async function seedDummyData() {
     try {
         console.log('Clearing existing pemasukan and biaya_history to start fresh...');
@@ -12,18 +29,18 @@ async function seedDummyData() {
         let totalKonsumsi = 0;
         let totalOperasional = 0;
 
-        console.log('Inserting dummy data for the last 14 days...');
+        console.log('Inserting realistic dummy data with updated range 500k-1.5M...');
 
         for (let i = 14; i >= 0; i--) {
             // Calculate date for i days ago
             const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
             const dateString = date.toISOString().split('T')[0];
 
-            // 1. Generate Pemasukan (random between 800k and 2M, rounded to nearest 1,000)
-            const incomeJumlahRaw = Math.floor(Math.random() * (2000000 - 800000 + 1)) + 800000;
+            // 1. Generate Pemasukan (random between 500k and 1.5M, rounded to nearest 1,000)
+            const incomeJumlahRaw = Math.floor(Math.random() * (1500000 - 500000 + 1)) + 500000;
             const incomeJumlah = Math.round(incomeJumlahRaw / 1000) * 1000;
             
-            const incomeKeterangan = `Pemasukan tunai dummy H-${i}`;
+            const incomeKeterangan = 'Pemasukan tunai';
             const sensitiveIncome = JSON.stringify({
                 jumlah: incomeJumlah,
                 tanggal: dateString,
@@ -41,7 +58,7 @@ async function seedDummyData() {
             const konsumsiJumlahRaw = Math.floor(Math.random() * (35000 - 10000 + 1)) + 10000;
             const konsumsiJumlah = Math.round(konsumsiJumlahRaw / 1000) * 1000;
             
-            const konsumsiKeterangan = `Konsumsi harian dummy H-${i}`;
+            const konsumsiKeterangan = konsumsiDesc[Math.floor(Math.random() * konsumsiDesc.length)];
             await db.query(
                 'INSERT INTO biaya_history (jenis, jumlah, changed_by, keterangan, tanggal) VALUES (?, ?, ?, ?, ?)',
                 ['konsumsi', konsumsiJumlah, 'DechaJaya', konsumsiKeterangan, dateString]
@@ -52,7 +69,7 @@ async function seedDummyData() {
             const operasionalJumlahRaw = Math.floor(Math.random() * (75000 - 20000 + 1)) + 20000;
             const operasionalJumlah = Math.round(operasionalJumlahRaw / 1000) * 1000;
             
-            const operasionalKeterangan = `Operasional dummy H-${i}`;
+            const operasionalKeterangan = operasionalDesc[Math.floor(Math.random() * operasionalDesc.length)];
             await db.query(
                 'INSERT INTO biaya_history (jenis, jumlah, changed_by, keterangan, tanggal) VALUES (?, ?, ?, ?, ?)',
                 ['operasional', operasionalJumlah, 'DechaJaya', operasionalKeterangan, dateString]
@@ -66,7 +83,7 @@ async function seedDummyData() {
         await db.query("UPDATE biaya SET jumlah = ? WHERE jenis = 'konsumsi'", [totalKonsumsi]);
         await db.query("UPDATE biaya SET jumlah = ? WHERE jenis = 'operasional'", [totalOperasional]);
 
-        console.log('✅ Dummy data successfully seeded for 14 days with updated range!');
+        console.log('✅ Dummy data successfully seeded with new range 500k-1.5M!');
     } catch (error) {
         console.error('Error seeding dummy data:', error);
     }
